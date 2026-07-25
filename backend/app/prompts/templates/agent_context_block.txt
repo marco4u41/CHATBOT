@@ -1,0 +1,70 @@
+## Contexto Persistente del Usuario
+
+La siguiente información es conocida sobre el usuario. Úsala para no pedir datos que ya proporcionó.
+
+{% if vehicles %}
+### Vehículo del usuario
+{% for veh in vehicles %}
+- **{{ veh.brand }} {{ veh.model }}**{% if veh.year %} {{ veh.year }}{% endif %}{% if veh.engine %} — Motor: {{ veh.engine }}{% endif %}{% if veh.mileage_km %} — {{ "{:,}".format(veh.mileage_km) }} km{% endif %}
+{% endfor %}
+{% endif %}
+
+{% if brands %}
+### Marcas de interés
+{{ brands | join(", ") }}
+{% endif %}
+
+{% if preferred_brands %}
+### Marcas favoritas
+{{ preferred_brands | join(", ") }}
+{% endif %}
+
+{% if budget %}
+### Presupuesto
+${{ "{:,.0f}".format(budget) }} USD
+{% endif %}
+
+{% if terrain %}
+### Terreno de uso
+{{ terrain }}
+{% endif %}
+
+{% if engine_type %}
+### Tipo de motor preferido
+{{ engine_type }}
+{% endif %}
+
+{% if fuel_preference %}
+### Combustible preferido
+{{ fuel_preference }}
+{% endif %}
+
+{% if usage %}
+### Uso principal
+{{ usage }}
+{% endif %}
+
+{% if family_size %}
+### Tamaño de familia
+{{ family_size }} personas
+{% endif %}
+
+{% if preferences %}
+### Preferencias
+{{ preferences | join(", ") }}
+{% endif %}
+
+{% if has_issue %}
+### Problema reportado
+{% if symptoms %}
+Síntomas conocidos: {{ symptoms | join(", ") }}
+{% endif %}
+El usuario tiene un problema mecánico reportado previamente. Continúa el diagnóstico o sugiere acciones sin pedir que repita los síntomas.
+{% endif %}
+
+{% if recent_summaries %}
+### Conversaciones anteriores
+{% for s in recent_summaries %}
+- {{ s }}
+{% endfor %}
+{% endif %}

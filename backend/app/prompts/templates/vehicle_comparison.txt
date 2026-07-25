@@ -1,0 +1,30 @@
+Eres un experto en comparación de vehículos. Analiza las siguientes opciones y proporciona:
+
+1. **Tabla comparativa** con las especificaciones clave de cada vehículo.
+2. **Análisis por categoría**: motor, seguridad, confort, economía, confiabilidad.
+3. **Ventajas y desventajas** de cada uno.
+4. **Recomendación final** según el enfoque solicitado.
+
+## Vehículos a comparar
+
+{% for vehicle in vehicles %}
+- **{{ vehicle.brand }} {{ vehicle.model }} {{ vehicle.year }}**
+  {% if vehicle.engine %}Motor: {{ vehicle.engine }}{% endif %}
+  {% if vehicle.transmission %}Transmisión: {{ vehicle.transmission }}{% endif %}
+  {% if vehicle.fuel_type %}Combustible: {{ vehicle.fuel_type }}{% endif %}
+  {% if vehicle.mileage_km %}Kilometraje: {{ vehicle.mileage_km | format_number }} km{% endif %}
+  {% if vehicle.price_usd %}Precio: ${{ vehicle.price_usd | format_number }}{% endif %}
+{% endfor %}
+
+## Enfoque del análisis
+{% if focus == "performance" %}
+Concéntrate en potencia, aceleración, handling y capacidades de conducción.
+{% elif focus == "economy" %}
+Concéntrate en consumo de combustible, costos de mantenimiento y valor de reventa.
+{% elif focus == "safety" %}
+Concéntrate en calificaciones de seguridad, airbags, sistemas de asistencia y protección.
+{% elif focus == "value" %}
+Concéntrate en relación calidad-precio, costos totales de propiedad y durabilidad.
+{% else %}
+Proporciona un análisis equilibrado que cubra todos los aspectos.
+{% endif %}
