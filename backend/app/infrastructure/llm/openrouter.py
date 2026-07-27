@@ -90,45 +90,58 @@ class OpenRouterProvider(LLMProvider):
             "stream": True,
         }
 
-        async with httpx.AsyncClient(timeout=120.0) as client:
-            try:
-                response = await self._request_with_retry(client, payload)
-
-                async with client.stream(
-                    "POST",
-                    f"{self._base_url}/chat/completions",
-                    headers=self._build_headers(),
-                    json=payload,
-                ) as stream_response:
-                    if stream_response.status_code == 429:
-                        retry_after = int(stream_response.headers.get("retry-after", "60"))
-                        raise LLMRateLimitError("openrouter", retry_after=retry_after)
-                    if stream_response.status_code != 200:
-                        body = await stream_response.aread()
-                        raise LLMProviderError(
-                            "openrouter",
-                            f"HTTP {stream_response.status_code}: {body.decode()}",
-                        )
-
-                    async for line in stream_response.aiter_lines():
-                        if not line.startswith("data: "):
-                            continue
-                        data = line[6:]
-                        if data.strip() == "[DONE]":
-                            break
-                        try:
-                            chunk = json.loads(data)
-                            delta = chunk["choices"][0].get("delta", {})
-                            content = delta.get("content", "")
-                            if content:
-                                yield content
-                        except (json.JSONDecodeError, KeyError, IndexError):
+        for attempt in range(_MAX_RETRIES):
+            async with httpx.AsyncClient(timeout=120.0) as client:
+                try:
+                    async with client.stream(
+                        "POST",
+                        f"{self._base_url}/chat/completions",
+                        headers=self._build_headers(),
+                        json=payload,
+                    ) as stream_response:
+                        if stream_response.status_code == 429:
+                            retry_after = int(
+                                stream_response.headers.get("retry-after", str(_RETRY_BASE_DELAY)),
+                            )
+                            delay = min(retry_after, 30)
+                            logger.warning(
+                                "Rate limited on stream (attempt %d/%d). Retrying in %ds...",
+                                attempt + 1,
+                                _MAX_RETRIES,
+                                delay,
+                            )
+                            await asyncio.sleep(delay)
                             continue
 
-            except httpx.TimeoutException as exc:
-                raise LLMProviderError("openrouter", f"Request timed out: {exc}") from exc
-            except httpx.ConnectError as exc:
-                raise LLMProviderError("openrouter", f"Connection failed: {exc}") from exc
+                        if stream_response.status_code != 200:
+                            body = await stream_response.aread()
+                            raise LLMProviderError(
+                                "openrouter",
+                                f"HTTP {stream_response.status_code}: {body.decode()}",
+                            )
+
+                        async for line in stream_response.aiter_lines():
+                            if not line.startswith("data: "):
+                                continue
+                            data = line[6:]
+                            if data.strip() == "[DONE]":
+                                break
+                            try:
+                                chunk = json.loads(data)
+                                delta = chunk["choices"][0].get("delta", {})
+                                content = delta.get("content", "")
+                                if content:
+                                    yield content
+                            except (json.JSONDecodeError, KeyError, IndexError):
+                                continue
+                        return
+
+                except httpx.TimeoutException as exc:
+                    raise LLMProviderError("openrouter", f"Request timed out: {exc}") from exc
+                except httpx.ConnectError as exc:
+                    raise LLMProviderError("openrouter", f"Connection failed: {exc}") from exc
+
+        raise LLMProviderError("openrouter", "Max retries exceeded on stream")
 
     async def chat(
         self,

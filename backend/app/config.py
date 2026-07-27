@@ -16,10 +16,12 @@ class Settings(BaseSettings):
     postgres_db: str = ""
 
     openrouter_api_key: str = ""
-    openrouter_model: str = "deepseek/deepseek-chat-v3-0324:free"
+    openrouter_model: str = "nvidia/nemotron-3-ultra-550b-a55b:free"
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
 
     cors_origins: list[str] = ["http://localhost:5173", "http://localhost:3000"]
+
+    jwt_secret: str = "autoexpert-dev-secret-change-in-production-2025"
 
     @property
     def database_url(self) -> str:
@@ -48,6 +50,21 @@ class Settings(BaseSettings):
         return not (self.postgres_host and self.postgres_user)
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
+
+    def model_post_init(self, __context: object) -> None:
+        if self.app_env == "production":
+            insecure_defaults = {
+                "",
+                "autoexpert-dev-secret-change-in-production-2025",
+                "change-me",
+                "secret",
+                "jwt-secret",
+            }
+            if self.jwt_secret in insecure_defaults:
+                raise ValueError(
+                    "jwt_secret must be set to a secure value in production. "
+                    "Set the JWT_SECRET environment variable."
+                )
 
 
 settings = Settings()

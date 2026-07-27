@@ -28,12 +28,13 @@ class ChatUseCase:
         budget: float | None = None,
         terrain: str | None = None,
         engine_type: str | None = None,
+        user_id: str | None = None,
     ) -> AsyncIterator[tuple[str, bool, str]]:
         """Yields (token_chunk, done, conversation_id) tuples."""
         if not content.strip():
             raise MessageValidationError("Message content cannot be empty")
 
-        conversation = await self._ensure_conversation(conversation_id)
+        conversation = await self._ensure_conversation(conversation_id, user_id=user_id)
 
         user_message = Message(
             content=content.strip(),
@@ -79,11 +80,11 @@ class ChatUseCase:
 
         yield "", True, conversation.id
 
-    async def _ensure_conversation(self, conversation_id: str | None) -> Conversation:
+    async def _ensure_conversation(self, conversation_id: str | None, user_id: str | None = None) -> Conversation:
         if conversation_id:
-            conversation = await self._conversation_repo.get_by_id(conversation_id)
+            conversation = await self._conversation_repo.get_by_id(conversation_id, user_id=user_id)
             if conversation:
                 return conversation
 
         conversation = Conversation(title="Nueva conversación")
-        return await self._conversation_repo.create(conversation)
+        return await self._conversation_repo.create(conversation, user_id=user_id)

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 
 from app.api.schemas.chat import ChatRequest, ChatStreamChunk
@@ -16,13 +16,15 @@ from app.dependencies import (
     get_recommendation_use_case,
     get_vehicle_comparison_use_case,
 )
-from app.domain.exceptions import ChatbotError
+from app.domain.exceptions import ChatbotError, ConversationNotFoundError
+from app.domain.models.user import User
 from app.domain.models.vehicle import Vehicle
 from app.use_cases.chat import ChatUseCase
 from app.use_cases.conversations import ConversationUseCase
 from app.use_cases.diagnosis import DiagnosisUseCase
 from app.use_cases.recommendation import RecommendationUseCase
 from app.use_cases.vehicle_comparison import VehicleComparisonUseCase
+from app.api.v1.auth import get_current_user
 
 router = APIRouter()
 
@@ -31,6 +33,7 @@ router = APIRouter()
 async def chat(
     request: ChatRequest,
     use_case: ChatUseCase = Depends(get_chat_use_case),
+    user: User = Depends(get_current_user),
 ):
     async def event_generator():
         try:
@@ -40,6 +43,7 @@ async def chat(
                 budget=request.budget,
                 terrain=request.terrain,
                 engine_type=request.engine_type,
+                user_id=user.id,
             ):
                 data = ChatStreamChunk(
                     content=chunk,
@@ -47,15 +51,19 @@ async def chat(
                     conversation_id=conv_id,
                 )
                 yield f"data: {data.model_dump_json()}\n\n"
+        except ConversationNotFoundError:
+            import json
+            error_data = {"error": "Conversación no encontrada", "done": True}
+            yield f"data: {json.dumps(error_data)}\n\n"
         except ChatbotError as exc:
             import json
             error_data = {"error": str(exc), "done": True}
             yield f"data: {json.dumps(error_data)}\n\n"
-        except Exception as exc:
+        except Exception:
             import json
             import traceback
             traceback.print_exc()
-            error_data = {"error": f"Error interno del servidor: {exc}", "done": True}
+            error_data = {"error": "Error interno del servidor", "done": True}
             yield f"data: {json.dumps(error_data)}\n\n"
 
     return StreamingResponse(
@@ -69,12 +77,13 @@ async def chat(
     )
 
 
-@router.get("/conversations", response_model=list[ConversationResponse])
+@router.get("/conversations")
 async def list_conversations(
     use_case: ConversationUseCase = Depends(get_conversation_use_case),
+    user: User = Depends(get_current_user),
 ):
-    conversations = await use_case.list_all()
-    return [
+    conversations = await use_case.list_all(user_id=user.id)
+    data = [
         ConversationResponse(
             id=c.id,
             title=c.title,
@@ -84,15 +93,20 @@ async def list_conversations(
         )
         for c in conversations
     ]
+    return {"success": True, "data": data}
 
 
-@router.get("/conversations/{conversation_id}/messages", response_model=list[MessageResponse])
+@router.get("/conversations/{conversation_id}/messages")
 async def get_conversation_messages(
     conversation_id: str,
     use_case: ConversationUseCase = Depends(get_conversation_use_case),
+    user: User = Depends(get_current_user),
 ):
-    messages = await use_case.get_messages(conversation_id)
-    return [
+    try:
+        messages = await use_case.get_messages(conversation_id, user_id=user.id)
+    except ConversationNotFoundError:
+        raise HTTPException(status_code=404, detail="Conversación no encontrada")
+    data = [
         MessageResponse(
             id=m.id,
             content=m.content,
@@ -102,14 +116,19 @@ async def get_conversation_messages(
         )
         for m in messages
     ]
+    return {"success": True, "data": data}
 
 
 @router.delete("/conversations/{conversation_id}")
 async def delete_conversation(
     conversation_id: str,
     use_case: ConversationUseCase = Depends(get_conversation_use_case),
+    user: User = Depends(get_current_user),
 ):
-    await use_case.delete(conversation_id)
+    try:
+        await use_case.delete(conversation_id, user_id=user.id)
+    except ConversationNotFoundError:
+        raise HTTPException(status_code=404, detail="Conversación no encontrada")
     return {"success": True}
 
 

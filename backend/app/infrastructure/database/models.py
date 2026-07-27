@@ -1,15 +1,36 @@
 from datetime import UTC, datetime
 
-from sqlalchemy import DateTime, ForeignKey, Integer, Numeric, String, Text
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.infrastructure.database.connection import Base
+
+
+class UserModel(Base):
+    __tablename__ = "users"
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True)
+    email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
+    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    display_name: Mapped[str] = mapped_column(String(100), nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    is_admin: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+    )
 
 
 class ConversationModel(Base):
     __tablename__ = "conversations"
 
     id: Mapped[str] = mapped_column(String(32), primary_key=True)
+    user_id: Mapped[str | None] = mapped_column(String(32), nullable=True, index=True)
     title: Mapped[str] = mapped_column(String(200), nullable=False)
     summary: Mapped[str | None] = mapped_column(Text, nullable=True, default=None)
     created_at: Mapped[datetime] = mapped_column(
@@ -147,3 +168,32 @@ class BrandModel(Base):
     year_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
     total_listings: Mapped[int | None] = mapped_column(Integer, nullable=True)
     average_price: Mapped[float | None] = mapped_column(Numeric(12, 2), nullable=True)
+
+
+class UserGarageVehicleModel(Base):
+    __tablename__ = "user_garage_vehicles"
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True)
+    user_id: Mapped[str] = mapped_column(
+        String(32), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True,
+    )
+    brand: Mapped[str] = mapped_column(String(50), nullable=False)
+    model: Mapped[str] = mapped_column(String(100), nullable=False)
+    year: Mapped[int] = mapped_column(Integer, nullable=False)
+    engine: Mapped[str] = mapped_column(String(100), nullable=True, default="")
+    transmission: Mapped[str] = mapped_column(String(50), nullable=True, default="")
+    fuel_type: Mapped[str] = mapped_column(String(50), nullable=True, default="")
+    mileage_km: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    price_usd: Mapped[float | None] = mapped_column(Numeric(12, 2), nullable=True)
+    body_type: Mapped[str] = mapped_column(String(50), nullable=True, default="")
+    drive: Mapped[str] = mapped_column(String(50), nullable=True, default="")
+    condition: Mapped[str] = mapped_column(String(50), nullable=True, default="")
+    color: Mapped[str] = mapped_column(String(50), nullable=True, default="")
+    cylinders: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    passengers: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    consumption: Mapped[str] = mapped_column(String(50), nullable=True, default="")
+    notes: Mapped[str] = mapped_column(Text, nullable=True, default="")
+    added_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+    )

@@ -1,53 +1,98 @@
+# Docker Compose para AutoExpert AI
+# Levanta: PostgreSQL + Backend (FastAPI) + Frontend (React/Vite)
+# Uso: docker compose up --build -d
+
 services:
+  # ──────────────────────────────────────────────
+  # Base de datos PostgreSQL
+  # ──────────────────────────────────────────────
   postgres:
     image: postgres:16-alpine
-    container_name: chatbot_postgres
-    restart: unless-stopped
+    container_name: autoexpert-db
     environment:
+      POSTGRES_DB: ${POSTGRES_DB:-autoexpert_db}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-admin1234}
-      POSTGRES_DB: ${POSTGRES_DB:-autoexpert_db}
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-autoexpert_db}"]
       interval: 5s
-      timeout: 5s
-      retries: 5
+      timeout: 3s
+      retries: 10
+    networks:
+      - autoexpert-net
+    restart: unless-stopped
 
+  # ──────────────────────────────────────────────
+  # Backend FastAPI
+  # ──────────────────────────────────────────────
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: chatbot_backend
-    restart: unless-stopped
-    env_file:
-      - .env
+    container_name: autoexpert-backend
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      DEBUG: ${DEBUG:-true}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-admin1234}
+      POSTGRES_DB: ${POSTGRES_DB:-autoexpert_db}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      OPENROUTER_MODEL: ${OPENROUTER_MODEL:-nvidia/nemotron-3-ultra-550b-a55b:free}
+      OPENROUTER_BASE_URL: ${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-production}
+      CORS_ORIGINS: ${CORS_ORIGINS:-["http://localhost:5173","http://localhost:3000"]}
+    volumes:
+      - ./backend:/app
     ports:
-      - "${APP_PORT:-8000}:8000"
+      - "8000:8000"
     depends_on:
       postgres:
         condition: service_healthy
-    volumes:
-      - ./backend:/app
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+    networks:
+      - autoexpert-net
+    restart: unless-stopped
 
+  # ──────────────────────────────────────────────
+  # Frontend React + Vite
+  # ──────────────────────────────────────────────
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: chatbot_frontend
-    restart: unless-stopped
+      target: ${FRONTEND_TARGET:-development}
+    container_name: autoexpert-frontend
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
     ports:
       - "5173:5173"
+      - "80:80"
     depends_on:
-      - backend
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    command: npm run dev -- --host 0.0.0.0
+      backend:
+        condition: service_healthy
+    networks:
+      - autoexpert-net
+    restart: unless-stopped
 
+# ──────────────────────────────────────────────
+# Volúmenes y redes
+# ──────────────────────────────────────────────
 volumes:
   postgres_data:
+    driver: local
+
+networks:
+  autoexpert-net:
+    driver: bridge

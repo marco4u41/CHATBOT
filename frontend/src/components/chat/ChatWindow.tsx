@@ -35,27 +35,16 @@ export function ChatWindow() {
 
   return (
     <div className="flex-1 flex flex-col min-h-0">
-      {/* Header */}
-      <header className="flex-shrink-0 px-6 py-3 liquid-glass-panel border-b border-white/8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-sm font-bold text-white tracking-tight flex items-center gap-2">
-              <span className="inline-block w-2 h-2 rounded-full bg-neon-green animate-glow-pulse" />
-              AutoBot
-            </h1>
-            <p className="text-xs text-white/35 font-mono mt-0.5">
-              Comparación · Diagnóstico · Recomendación
-            </p>
-          </div>
-          <PhysicalPanel />
-        </div>
-      </header>
+      {/* Physical Panel trigger */}
+      <div className="flex-shrink-0 flex justify-end px-6 pt-3">
+        <PhysicalPanel />
+      </div>
 
       {/* Messages */}
       <div
         ref={containerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto px-6 py-4"
+        className="flex-1 overflow-y-auto px-6 py-4 ax-scrollbar"
         role="log"
         aria-label="Mensajes del chat"
         aria-live="polite"
@@ -63,7 +52,7 @@ export function ChatWindow() {
         {messages.length === 0 && !isStreaming ? (
           <EmptyState />
         ) : (
-          <div className="max-w-3xl mx-auto space-y-4">
+          <div className="max-w-6xl mx-auto space-y-4">
             {messages.map((message) => (
               <MessageBubble key={message.id} message={message} />
             ))}
@@ -87,8 +76,8 @@ export function ChatWindow() {
 
       {/* Error */}
       {error && (
-        <div className="px-6 py-2 bg-neon-red/5 border-t border-neon-red/20">
-          <p className="text-xs text-neon-red flex items-center gap-2">
+        <div className="px-6 py-2 bg-ax-accent-danger/[0.06] border-t border-ax-accent-danger/20">
+          <p className="text-xs text-red-400 flex items-center gap-2">
             <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
             </svg>
@@ -113,9 +102,9 @@ export function ChatWindow() {
 function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center h-full text-center py-16">
-      <div className="w-20 h-20 mb-6 rounded-2xl bg-gradient-to-br from-neon-blue/10 to-neon-orange/5 flex items-center justify-center border border-neon-blue/15 animate-tilt-in">
+      <div className="w-20 h-20 mb-6 rounded-2xl bg-ax-accent-info/[0.08] flex items-center justify-center border border-ax-accent-info/15 animate-ax-scale-in">
         <svg
-          className="w-10 h-10 text-neon-blue/60"
+          className="w-10 h-10 text-ax-accent-info/60"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -128,19 +117,19 @@ function EmptyState() {
           />
         </svg>
       </div>
-      <h2 className="text-xl font-bold text-white mb-2 tracking-tight">
+      <h2 className="ax-text-heading text-xl text-ax-text-primary mb-2">
         Bienvenido a AutoBot
       </h2>
-      <p className="text-sm text-white/35 max-w-sm leading-relaxed">
-        Compara vehículos, obtén diagnósticos mecánicos y recomendaciones
+      <p className="text-sm text-ax-text-muted max-w-sm leading-relaxed">
+        Compara vehiculos, obtiene diagnosticos mecanicos y recomendaciones
         personalizadas. Escribe un mensaje para comenzar.
       </p>
-      <div className="flex gap-2 mt-6">
-        {["Comparar autos", "Diagnosticar falla", "Recomendar vehículo"].map(
+      <div className="flex gap-2 mt-6 flex-wrap justify-center">
+        {["Comparar autos", "Diagnosticar falla", "Recomendar vehiculo"].map(
           (text) => (
             <span
               key={text}
-              className="glass-badge rounded-full px-3 py-1.5 text-[11px] text-white/30"
+              className="inline-flex items-center rounded-full px-3 py-1.5 text-[11px] font-ax-sans font-medium bg-white/[0.04] text-ax-text-muted border border-white/[0.06]"
             >
               {text}
             </span>

@@ -12,13 +12,13 @@ export function ComparisonResult({ content, isLoading }: ComparisonResultProps) 
     return (
       <Card>
         <CardHeader>
-          <div className="h-5 w-48 bg-white/5 rounded-lg shimmer" />
+          <div className="h-5 w-48 bg-ax-surface-light rounded-lg animate-ax-shimmer" />
         </CardHeader>
         <CardContent className="space-y-3">
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="h-3 bg-white/5 rounded-lg shimmer"
+              className="h-3 bg-ax-surface-light rounded-lg animate-ax-shimmer"
               style={{ width: `${80 - i * 15}%` }}
             />
           ))}
@@ -30,13 +30,13 @@ export function ComparisonResult({ content, isLoading }: ComparisonResultProps) 
   return (
     <Card>
       <CardHeader>
-        <h3 className="text-sm font-bold text-white tracking-tight flex items-center gap-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-neon-orange" />
+        <h3 className="text-sm font-bold text-ax-text-primary tracking-tight flex items-center gap-2">
+          <span className="w-1.5 h-1.5 rounded-full bg-ax-accent-warning" />
           Resultado de comparacion
         </h3>
       </CardHeader>
       <CardContent>
-        <div className="message-content prose prose-sm prose-invert max-w-none text-xs text-white/70">
+        <div className="message-content prose prose-sm prose-invert max-w-none text-xs text-ax-text-secondary">
           <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
         </div>
       </CardContent>

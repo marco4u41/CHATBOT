@@ -1,467 +1,384 @@
-# AutoExpert AI
+# 🚗 AutoExpert AI — Asistente Automotriz Inteligente con RAG y Tool Calling
 
-Asistente automotriz inteligente con conversaciones en tiempo real, recomendaciones de vehículos, comparación, diagnóstico orientativo, garage virtual y dashboard analítico. Potenciado por IA a través de OpenRouter.
+![Python](https://img.shields.io/badge/Python-3.13+-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688?style=for-the-badge&logo=fastapi&logoColor=white)
+![React](https://img.shields.io/badge/React-18.3-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14+-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)
+![OpenRouter](https://img.shields.io/badge/OpenRouter-Nemotron--3--Ultra-FF6B35?style=for-the-badge&logo=openai&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![Tests](https://img.shields.io/badge/Tests-pytest%20%7C%20Vitest-brightgreen?style=for-the-badge)
+![License](https://img.shields.io/badge/License-Academic%20Use-blue?style=for-the-badge)
 
-## Descripción
+---
 
-AutoExpert AI es una aplicación full-stack que combina una base de datos vehicular con un agente de IA conversacional. El usuario puede mantener conversaciones privadas donde el asistente recomienda, compara y diagnostica vehículos utilizando datos reales de la base de datos complementados con conocimiento general automotriz.
+## 📌 Descripción General
 
-### Funcionalidades principales
+**AutoExpert AI** es una aplicación *full-stack* que combina una base de datos vehicular estructurada (20,000+ vehículos, 47,000+ registros de mercado) con un **agente de IA conversacional** capaz de:
 
-- **Autenticación**: Login, registro y cierre de sesión con JWT y cookies httpOnly.
-- **Conversaciones privadas**: Cada usuario tiene su historial de conversaciones persistente en PostgreSQL.
-- **Recomendaciones**: El agente filtra vehículos por marca, presupuesto, tipo, combustible y uso, manteniendo estrictamente las restricciones del usuario.
-- **Comparación**: Tabla comparativa interactiva con análisis cualitativo específico por vehículo.
-- **Diagnóstico orientativo**: Orientación sobre posibles problemas mecánicos basada en síntomas reportados.
-- **Garage Virtual**: El usuario guarda hasta 10 vehículos en su garage personal, persistente entre sesiones.
-- **Modal de comparación**: Comparación side-by-side desde el garage con análisis de uso, confort, desempeño y confiabilidad.
-- **Dashboard y analítica**: Estadísticas de uso, distribución de vehículos y actividad reciente.
-- **Respuestas en español**: Todo el sistema opera exclusivamente en español.
-- **Streaming en tiempo real**: Las respuestas del asistente se muestran token por token.
+- **Recomendar** vehículos filtrando por marca, presupuesto, tipo, combustible y uso —respetando estrictamente las restricciones del usuario—
+- **Comparar** modelos mediante tablas interactivas con análisis cualitativo (uso, confort, desempeño, confiabilidad)
+- **Diagnosticar** orientativamente problemas mecánicos a partir de síntomas reportados
+- **Persistir** conversaciones privadas, garage virtual (hasta 10 vehículos/usuario) y preferencias en PostgreSQL
+- **Exponer** analíticas de uso y mercado a través de un dashboard en tiempo real
 
-## Tecnologías
+El sistema implementa **RAG (Retrieval-Augmented Generation)** sobre datos propios + **Tool Calling** estructurado, orquestados por un agente multi-capacidad con clasificación de intención, gestión de contexto persistente y *follow-up* inteligente.
 
-### Frontend
+---
 
-| Tecnología | Versión | Uso |
-|---|---|---|
-| React | 18.3 | UI library |
-| TypeScript | 5.6 | Type safety |
-| Vite | 6.0 | Build tool y dev server |
-| TailwindCSS | 3.4 | Estilos |
-| Zustand | 5.0 | State management |
-| Vitest | 4.1 | Testing |
+## 🎯 Objetivos
 
-### Backend
+### Objetivo General
+Construir un asistente automotriz conversacional *production-ready* que demuestre integración de LLM con bases de datos relacionales, arquitectura de agentes, *prompt engineering* avanzado y despliegue full-stack.
 
-| Tecnología | Versión | Uso |
-|---|---|---|
-| Python | >=3.13 | Runtime |
-| FastAPI | 0.115+ | API framework |
-| SQLAlchemy | 2.0+ (async) | ORM |
-| Alembic | 1.14+ | Migraciones |
-| asyncpg | 0.30+ | PostgreSQL driver |
-| Pydantic | 2.6+ | Validation |
-| Uvicorn | 0.32+ | ASGI server |
+### Objetivos Específicos
+1. **Arquitectura de Agente**: Implementar orquestador con clasificación de intención (RECOMMENDATION | COMPARISON | DIAGNOSIS | GENERAL), *tool calling* tipado y registro de capacidades extensible.
+2. **RAG Estructurado**: Consultas SQL parametrizadas (`search_vehicles`, `get_vehicle_details`, `get_model_info`, `get_brand_info`) inyectadas como bloques de contexto en *system prompt*.
+3. **Gestión de Contexto**: Perfil de usuario persistente (presupuesto, uso, terreno, marcas mencionadas, síntomas, vehículos en garage) + historial de conversación con *sliding window*.
+4. **Seguimiento Inteligente**: Detección automática de campos faltantes críticos/importantes/complementarios y generación de preguntas de seguimiento contextualizadas.
+5. **Frontend Reactivo**: Streaming token-a-token, UI *glassmorphism* responsive, estado global con Zustand, validación Zod.
+6. **Calidad y Observabilidad**: Cobertura de tests backend (pytest) + frontend (Vitest/RTL), linting estricto, migraciones versionadas (Alembic), health checks.
 
-### IA
+---
 
-| Servicio | Modelo actual |
-|---|---|
-| OpenRouter | `nvidia/nemotron-3-ultra-550b-a55b:free` |
+## 🧠 Arquitectura del Agente IA
 
-## Requisitos
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        AGENT ORCHESTRATOR                        │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐  │
+│  │ Intent       │  │ Context      │  │ Capability Registry  │  │
+│  │ Classifier   │  │ Manager      │  │ (Recommendation,     │  │
+│  │ (keyword +   │  │ (UserProfile │  │  Comparison,         │  │
+│  │  heuristics) │  │  + History)  │  │  Diagnosis)          │  │
+│  └──────┬───────┘  └──────┬───────┘  └──────────┬───────────┘  │
+│         │                 │                      │             │
+│         ▼                 ▼                      ▼             │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │              AUTOMOTIVE AGENT TOOL (Interface)            │  │
+│  │  search_vehicles  │  get_vehicle_details  │ get_model_info │  │
+│  │  get_brand_info   │  list_brands            │ health_check │  │
+│  └──────────────────────────┬────────────────────────────────┘  │
+│                             │                                    │
+│                             ▼                                    │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │           POSTGRESQL (vehicles_master, brands,            │  │
+│  │            vehicle_market_stats, users, conversations)    │  │
+│  └──────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      OPENROUTER (Nemotron-3-Ultra)              │
+│  System Prompt = Base + Context Block + Capability Enhancement  │
+│  + Follow-up Instructions (jinja2 templates)                    │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-### Windows
+### Flujo de una petición
+1. **Clasificación de intención** → `IntentClassifier` (keywords + heurísticas de presupuesto/terreno/motor)
+2. **Construcción de contexto** → `ContextManager` recupera perfil + histórico → `UserContext`
+3. **Búsqueda automotriz** → `AutomotiveAgentTool` ejecuta queries SQL según intención → bloques de datos formateados
+4. **Ensamblaje de prompt** → `PromptLoader` renderiza plantillas Jinja2 (base + enhancement + follow-up)
+5. **LLM Streaming** → `OpenRouterProvider` envía *system prompt* + *history* + *user message* → tokens SSE
+6. **Persistencia** → Guarda `user_message`, `assistant_message`, actualiza `conversation.updated_at`
 
-| Requisito | Versión mínima | Comando para verificar |
-|---|---|---|
-| Windows | 10/11 | — |
+---
+
+## 📊 Base de Conocimiento (Dataset)
+
+| Tabla | Registros | Descripción |
+|-------|-----------|-------------|
+| `vehicles_master` | ~20,036 | Vehículos agregados por (marca, modelo, año) con stats de precio, odómetro, combustible, transmisión, tipo, carrocería, cilindros, consumo, confianza de mercado |
+| `vehicle_market_stats` | ~47,030 | Estadísticas por (marca, modelo): años disponibles, listados totales, precio medio/mediano global, modo de combustible/transmisión/tracción/tipo |
+| `brands` | ~N | Resumen por fabricante: conteo de modelos, años, listados, precio medio |
+| `users` | — | Autenticación (JWT en cookies httpOnly) |
+| `conversations` | — | Historial privado por usuario |
+| `messages` | — | Turnos de conversación (user/assistant) |
+| `user_profiles` | — | Panel físico (presupuesto, terreno, motor, uso, familia, preferencias) |
+| `user_garage_vehicles` | — | Garage virtual (máx. 10/usuario) |
+
+**Fuente**: Datos de listados públicos de vehículos (EE. UU.) agregados y anonimizados.
+
+---
+
+## ⚙️ Stack Tecnológico
+
+| Capa | Tecnología | Versión | Rol |
+|------|------------|---------|-----|
+| **Frontend** | React + TypeScript + Vite | 18.3 / 5.6 / 6.0 | SPA, SSR-ready |
+| **Estilos** | TailwindCSS | 3.4 | Utility-first, glassmorphism |
+| **Estado** | Zustand | 5.0 | Stores reactivos (auth, chat, garage, analytics) |
+| **Validación** | Zod | 3.24 | Schemas runtime + DX |
+| **Testing FE** | Vitest + React Testing Library | 4.1 / 16.3 | Unit + integration |
+| **Backend** | FastAPI (async) | 0.115+ | API REST + SSE streaming |
+| **ORM** | SQLAlchemy 2.0 (async) | 2.0+ | Mapeo tipado, sessions async |
+| **Migraciones** | Alembic | 1.14+ | Versionado de esquema |
+| **DB Driver** | asyncpg | 0.30+ | PostgreSQL async |
+| **Validación** | Pydantic v2 | 2.6+ | Request/response schemas |
+| **Auth** | JWT + bcrypt | — | Cookies httpOnly, SameSite=Lax |
+| **IA** | OpenRouter SDK (HTTP) | — | Nemotron-3-Ultra-550B (free tier) |
+| **Testing BE** | pytest + httpx | — | API + unit + integration |
+| **Contenedores** | Docker / Docker Compose | — | Dev + Prod ready |
+
+---
+
+## 🚀 Puesta en Marcha
+
+### Prerrequisitos
+| Herramienta | Versión mínima | Verificación |
+|-------------|----------------|--------------|
 | Git | 2.x | `git --version` |
 | Python | 3.13+ | `python --version` |
 | Node.js | 18+ | `node --version` |
 | npm | 9+ | `npm --version` |
 | PostgreSQL | 14+ | `psql --version` |
+| Docker (opcional) | 24+ | `docker --version` |
 
-### Linux / macOS
+---
 
-Las instrucciones están escritas para Windows PowerShell. Los comandos son equivalentes en Linux/macOS con las adaptaciones habituales (usa `python3`, `source .venv/bin/activate`, etc.).
+### Opción A: Docker Compose (Recomendado - Un comando)
 
-## Estructura del proyecto
+```bash
+# 1. Clonar
+git clone https://github.com/<tu-usuario>/AutoExpert-AI.git
+cd AutoExpert-AI/CHATBOT
 
-```
-CHATBOT/
-├── .env.example              # Variables de entorno de referencia
-├── .gitignore
-├── backend/
-│   ├── .env.example          # Variables del backend
-│   ├── alembic.ini           # Configuración de Alembic
-│   ├── alembic/
-│   │   ├── env.py            # Entorno de migraciones
-│   │   └── versions/         # Archivos de migración
-│   ├── app/
-│   │   ├── main.py           # Entrada FastAPI
-│   │   ├── config.py         # Settings (pydantic-settings)
-│   │   ├── dependencies.py   # Dependency injection
-│   │   ├── api/v1/           # Endpoints (chat, auth, garage, analytics, automotive)
-│   │   ├── domain/           # Lógica de negocio (agent, models, intents)
-│   │   ├── infrastructure/   # DB, LLM, repositories
-│   │   ├── prompts/          # Templates de prompts (Jinja2)
-│   │   └── use_cases/        # Casos de uso
-│   ├── database/             # SQLite fallback (dev)
-│   ├── scripts/              # Scripts de inspección
-│   ├── tests/                # Pruebas backend (pytest)
-│   └── pyproject.toml        # Dependencias y configuración Python
-├── frontend/
-│   ├── src/
-│   │   ├── api/              # API client
-│   │   ├── components/       # Componentes React
-│   │   ├── stores/           # Zustand stores
-│   │   ├── hooks/            # Custom hooks
-│   │   ├── types/            # TypeScript types
-│   │   └── utils/            # Utilidades
-│   ├── package.json
-│   ├── vite.config.ts
-│   └── tsconfig.json
-└── README.md
+# 2. Configurar variables de entorno
+cp backend/.env.example backend/.env
+# Edita backend/.env con tus credenciales (ver sección Variables de Entorno)
+
+# 3. Levantar todo (PostgreSQL + Backend + Frontend)
+docker compose up --build -d
+
+# 4. Verificar
+curl http://localhost:8000/health   # {"status":"ok"}
+# Frontend: http://localhost:5173
 ```
 
-## Instalación
+> **Nota**: El `docker-compose.yml` incluye healthchecks, volúmenes para BD y hot-reload en ambos servicios.
 
-### 1. Clonar el repositorio
+---
 
-```powershell
-git clone https://github.com/marco4u41/CHATBOT.git
-cd CHATBOT
-```
+### Opción B: Instalación Manual (Desarrollo local)
 
-### 2. Configurar PostgreSQL
-
-Crea la base de datos:
-
+#### 1. Base de datos PostgreSQL
 ```sql
--- Conéctate a PostgreSQL con un usuario con permisos de administrador
+-- Con usuario admin (postgres)
 CREATE DATABASE autoexpert_db;
+-- Usuario/contraseña por defecto en .env.example: postgres / admin1234
 ```
 
-Puerto por defecto: `5432`. Usuario por defecto: `postgres`.
-
-### 3. Configurar el backend
-
+#### 2. Backend
 ```powershell
-cd backend
+cd CHATBOT/backend
 
-# Crear entorno virtual
+# Entorno virtual
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
 
-# Actualizar pip
+# Dependencias
 python -m pip install --upgrade pip
-
-# Instalar dependencias
 pip install -e .
 pip install -e ".[dev]"
+
+# Migraciones
+alembic upgrade head
+
+# Servidor
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-### 4. Variables de entorno del backend
-
-Copia el archivo de ejemplo y completa tus valores:
-
+#### 3. Frontend (otra terminal)
 ```powershell
-cd backend
-Copy-Item .env.example .env
+cd CHATBOT/frontend
+npm install
+npm run dev
 ```
 
-Edita `backend/.env` con tus valores reales:
+#### 4. URLs de desarrollo
+| Servicio | URL |
+|----------|-----|
+| Frontend | http://localhost:5173 |
+| Backend API | http://127.0.0.1:8000 |
+| Swagger Docs | http://127.0.0.1:8000/docs |
+| Health Check | http://127.0.0.1:8000/health |
 
+---
+
+## 🔧 Variables de Entorno
+
+### Backend (`CHATBOT/backend/.env`)
 ```env
 # PostgreSQL
 POSTGRES_HOST=localhost
 POSTGRES_PORT=5432
 POSTGRES_USER=postgres
-POSTGRES_PASSWORD=tu-password-real
+POSTGRES_PASSWORD=tu_password_seguro
 POSTGRES_DB=autoexpert_db
 
 # OpenRouter (obtener key en https://openrouter.ai/keys)
-OPENROUTER_API_KEY=sk-or-v1-tu-api-key-real
+OPENROUTER_API_KEY=sk-or-v1-xxxxxxxxxxxxxxxxxxxxxxxx
 OPENROUTER_MODEL=nvidia/nemotron-3-ultra-550b-a55b:free
+OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
 
 # Backend
 APP_ENV=development
 DEBUG=true
+JWT_SECRET=clave-secreta-super-larga-y-aleatoria-64-chars-minimo
 
 # CORS
 CORS_ORIGINS=["http://localhost:5173","http://localhost:3000"]
 ```
 
-### 5. Aplicar migraciones
-
-```powershell
-cd backend
-.\.venv\Scripts\Activate.ps1
-alembic upgrade head
-```
-
-### 6. Configurar el frontend
-
-```powershell
-cd frontend
-npm install
-```
-
-No se requiere archivo `.env` para el frontend. La conexión al backend se realiza a través del proxy de Vite configurado en `vite.config.ts`.
-
-## Ejecutar
-
-### Backend
-
-```powershell
-cd backend
-.\.venv\Scripts\Activate.ps1
-python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
-```
+> **Fallback SQLite**: Si `POSTGRES_HOST` y `POSTGRES_USER` están vacíos, usa `backend/database/chatbot.db` automáticamente.
 
 ### Frontend
+No requiere `.env`. El proxy de Vite (`vite.config.ts`) redirige `/api/*` → `http://localhost:8000`.
 
-```powershell
-cd frontend
-npm run dev
-```
+---
 
-### URLs
-
-| Servicio | URL |
-|---|---|
-| Frontend | http://localhost:5173 |
-| Backend API | http://127.0.0.1:8000 |
-| Swagger docs | http://127.0.0.1:8000/docs |
-| Health check | http://127.0.0.1:8000/health |
-
-## Pruebas
+## 🧪 Testing y Calidad
 
 ### Backend
-
-```powershell
+```bash
 cd backend
 .\.venv\Scripts\Activate.ps1
-python -m pytest tests/ -q
+python -m pytest tests/ -q --cov=app --cov-report=term-missing
 ```
+- **Cobertura objetivo**: ≥ 85%
+- Tests: API (auth, chat, garage, analytics, automotive), dominio (agente, intenciones, herramientas), repositorios, migraciones
 
 ### Frontend
-
-```powershell
+```bash
 cd frontend
-npm run typecheck
-npm run test
-npm run build
+npm run typecheck      # TypeScript strict
+npm run lint           # ESLint + React hooks
+npm run test           # Vitest (unit + integration)
+npm run test:watch     # Modo watch
+npm run build          # Build producción (verifica tipos + bundle)
 ```
 
-## Migrations (Alembic)
+---
 
-### Ver migración actual
-
-```powershell
-cd backend
-.\.venv\Scripts\Activate.ps1
-alembic current
-```
-
-### Ver última migración disponible
-
-```powershell
-alembic heads
-```
-
-### Aplicar todas las migraciones pendientes
-
-```powershell
-alembic upgrade head
-```
-
-### Crear una nueva migración
-
-```powershell
-alembic revision --autogenerate -m "descripcion del cambio"
-```
-
-### Revertir una migración
-
-```powershell
-# Revertir una migración
-alembic downgrade -1
-
-# Revertir todo
-alembic downgrade base
-```
-
-> **Precaución**: Revertir migraciones en producción puede causar pérdida de datos. Siempre haz backup antes.
-
-## Variables de entorno
-
-| Variable | Descripción | Default |
-|---|---|---|
-| `APP_ENV` | Entorno de ejecución | `development` |
-| `DEBUG` | Modo debug | `true` |
-| `POSTGRES_HOST` | Host de PostgreSQL | `""` (usa SQLite) |
-| `POSTGRES_PORT` | Puerto de PostgreSQL | `5432` |
-| `POSTGRES_USER` | Usuario de PostgreSQL | `""` |
-| `POSTGRES_PASSWORD` | Contraseña de PostgreSQL | `""` |
-| `POSTGRES_DB` | Nombre de la base de datos | `""` |
-| `OPENROUTER_API_KEY` | API key de OpenRouter | `""` |
-| `OPENROUTER_MODEL` | Modelo de IA a usar | `nvidia/nemotron-3-ultra-550b-a55b:free` |
-| `OPENROUTER_BASE_URL` | URL base de OpenRouter | `https://openrouter.ai/api/v1` |
-| `CORS_ORIGINS` | Orígenes permitidos (JSON array) | `["http://localhost:5173"]` |
-
-> Si `POSTGRES_HOST` y `POSTGRES_USER` están vacíos, el backend usa SQLite como fallback (`backend/database/chatbot.db`).
-
-## Flujo de desarrollo
-
-1. Crear una rama para tu feature o fix:
-
-```powershell
-git checkout -b feat/nombre-del-cambio
-```
-
-2. Realizar los cambios.
-
-3. Ejecutar pruebas:
-
-```powershell
-# Backend
-cd backend
-.\.venv\Scripts\Activate.ps1
-python -m pytest tests/ -q
-
-# Frontend
-cd frontend
-npm run typecheck
-npm run test
-```
-
-4. Hacer commit:
-
-```powershell
-git add .
-git commit -m "feat: descripcion del cambio"
-```
-
-5. Push y Pull Request:
-
-```powershell
-git push -u origin feat/nombre-del-cambio
-```
-
-Abre un Pull Request en GitHub contra `master`.
-
-## Despliegue
-
-Actualmente el proyecto está preparado para ejecución local en Windows. El despliegue productivo requiere configurar por separado frontend, backend y PostgreSQL.
-
-### Backend (producción)
-
-1. **Variables de entorno**:
-
-```env
-APP_ENV=production
-DEBUG=false
-POSTGRES_HOST=tu-host-postgres
-POSTGRES_PORT=5432
-POSTGRES_USER=tu-usuario
-POSTGRES_PASSWORD=tu-password-seguro
-POSTGRES_DB=autoexpert_db
-OPENROUTER_API_KEY=sk-or-v1-tu-key-real
-JWT_SECRET=genera-un-string-aleatorio-de-64-caracteres
-CORS_ORIGINS=["https://tudominio.com"]
-```
-
-2. **Migraciones**: Ejecutar `alembic upgrade head` contra la base de datos de producción.
-
-3. **Servidor ASGI**: Ejecutar con Uvicorn o Gunicorn:
+## 📦 Migraciones (Alembic)
 
 ```bash
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
+cd backend
+.\.venv\Scripts\Activate.ps1
+
+alembic current          # Migración aplicada
+alembic heads            # Última disponible
+alembic upgrade head     # Aplicar pendientes
+alembic revision --autogenerate -m "descripción"
+alembic downgrade -1     # Revertir una
+alembic downgrade base   # Revertir todo (⚠️ pérdida de datos)
 ```
 
-4. **HTTPS**: Usar un reverse proxy (Nginx, Caddy) con certificado SSL.
+---
 
-5. **CORS**: Configurar `CORS_ORIGINS` con solo el dominio del frontend en producción.
+## 🐳 Despliegue en Producción
 
-### Frontend (producción)
+### Checklist Pre-Deploy
+- [ ] `APP_ENV=production` / `DEBUG=false`
+- [ ] `JWT_SECRET` = string aleatorio 64+ chars (no valor por defecto)
+- [ ] `POSTGRES_*` apuntan a instancia gestionada (RDS, Supabase, Neon, Railway)
+- [ ] `OPENROUTER_API_KEY` válida con cuota suficiente
+- [ ] `CORS_ORIGINS` = solo dominio frontend (ej. `["https://autoexpert.ai"]`)
+- [ ] `alembic upgrade head` ejecutado contra BD de producción
+- [ ] HTTPS + Reverse Proxy (Nginx/Caddy) + Certificado SSL
+- [ ] Cookies `Secure` + `SameSite=none` (config en `auth.py` según `APP_ENV`)
+- [ ] Logs sin secretos (revisar `backend.log`)
 
+### Backend (Docker)
+```dockerfile
+# Dockerfile.backend (multi-stage)
+FROM python:3.13-slim AS builder
+WORKDIR /app
+COPY pyproject.toml ./
+RUN pip install --no-cache-dir -e .
+
+FROM python:3.13-slim
+WORKDIR /app
+COPY --from=builder /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
+COPY . .
+EXPOSE 8000
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
+```
+
+### Frontend (Build Estático)
 ```bash
 cd frontend
 npm run build
+# Output en dist/ → servir con Nginx, Vercel, Netlify, Cloudflare Pages
+# Configurar rewrite: /api/* → https://api.tudominio.com
 ```
 
-La carpeta `dist/` contiene los archivos estáticos. Publicar en un servidor web estático (Nginx, Vercel, Netlify, Cloudflare Pages, etc.).
+---
 
-Configurar el proxy o重escritura de URLs para que `/api/*` se redirija al backend.
+## 🔍 Solución de Problemas Comunes
 
-### Base de datos
+| Síntoma | Causa Probable | Solución |
+|---------|----------------|----------|
+| `ECONNREFUSED` en `/api/*` | Backend no levantado | `docker compose up -d` o `uvicorn` en puerto 8000 |
+| `401 Unauthorized` en `/auth/me` | Cookie no enviada / CORS | Verificar `CORS_ORIGINS` + acceder via `localhost:5173` (no IP) |
+| `psycopg2.OperationalError` | PostgreSQL down / credenciales | `systemctl status postgresql` / revisar `.env` |
+| Migración `NotNullViolation` | Columna nueva sin default | Editar migración: `server_default=sa.false()` + `op.execute("UPDATE ...")` |
+| Streaming se corta | Timeout OpenRouter / red | Aumentar `timeout` en `httpx.AsyncClient` (openrouter.py) |
+| `ModuleNotFoundError: psycopg2` | Falta driver en venv | `pip install psycopg2-binary` |
 
-1. Crear una instancia de PostgreSQL en producción (AWS RDS, Supabase, Neon, Railway, etc.).
-2. Configurar `DATABASE_URL` apuntando a la instancia.
-3. Ejecutar `alembic upgrade head`.
-4. No subir backups ni contraseñas al repositorio.
+---
 
-### Checklist de despliegue
+## 🔐 Seguridad
 
-- [ ] Variables de entorno configuradas en el servidor
-- [ ] `JWT_SECRET` es un valor aleatorio seguro (no el default de desarrollo)
-- [ ] Migraciones aplicadas (`alembic upgrade head`)
-- [ ] Frontend compilado (`npm run build`)
-- [ ] Backend iniciado y respondiendo en `/health`
-- [ ] HTTPS habilitado
-- [ ] CORS restringido al dominio del frontend
-- [ ] Cookies con flag `Secure` en producción
-- [ ] Pruebas básicas pasan (login, chat, garage)
-- [ ] Logs no contienen secretos ni passwords
+- `.env` en `.gitignore` — **nunca** commitear secretos
+- `.env.example` solo con placeholders
+- Passwords: **bcrypt** (cost 12)
+- Sesiones: **JWT** (HS256) en cookies `httpOnly`, `SameSite=Lax`, `Secure` en prod
+- CORS: restringido a `CORS_ORIGINS`
+- Validación estricta: **Pydantic v2** en todos los endpoints
+- Rate limiting: *(pendiente — ver roadmap)*
 
-## Solución de problemas
+---
 
-### PostgreSQL no inicia
+## 🗺️ Roadmap / Próximos Pasos
 
-- Verificar que el servicio de PostgreSQL esté corriendo: Services > postgresql
-- Verificar el puerto: `netstat -an | findstr 5432`
+- [ ] **Rate limiting** (`slowapi` + Redis) en `/api/chat`
+- [ ] **Evaluaciones automáticas del agente** (golden set + métricas: intent accuracy, tool call correctness, hallucination rate)
+- [ ] **Observabilidad**: OpenTelemetry + Prometheus + Grafana (latencia, tokens, errores)
+- [ ] **Tests E2E** (Playwright): login → chat → recomendación → garage → comparación → dashboard
+- [ ] **Búsqueda semántica** (pgvector) sobre descripciones de vehículos
+- [ ] **Multi-idioma** (i18n) — arquitectura lista, solo diccionarios
+- [ ] **PWA** (service worker, manifest, offline-first para garage)
+- [ ] **Admin panel** (gestión usuarios, métricas, auditoría)
 
-### Contraseña incorrecta de PostgreSQL
+---
 
-- Verificar `POSTGRES_PASSWORD` en `backend/.env`
-- Probar conexión manual: `psql -U postgres -d autoexpert_db`
+## 👨‍💻 Autores
 
-### Puerto 5432 ocupado
+| Nombre | Rol | GitHub |
+|--------|-----|--------|
+| **Carlos Alejandro Coronel Quilachamin** | Backend / IA / DevOps | [@coronelcarlos](https://github.com/coronelcarlos) |
+| **David Alejandro Cruz Palacios** | Backend / Base de Datos / Testing | [@cruzdavid](https://github.com/cruzdavid) |
+| **Dilan Andres Delgado Salgado** | Frontend / UX / Estado | [@delgadodilan](https://github.com/delgadodilan) |
+| **Marco Antonio Espinoza Huanga** | Arquitectura / IA / Prompt Engineering | [@espinozamarco](https://github.com/espinozamarco) |
 
-- PostgreSQL puede estar en otro puerto (común: 5433). Actualiza `POSTGRES_PORT` en `.env`.
+> Proyecto desarrollado para **Inteligencia Artificial — Sexto Semestre**  
+> Universidad Politécnica Salesiana — Quito, Ecuador
 
-### Backend no responde
+---
 
-- Verificar que esté corriendo en el puerto 8000
-- Revisar `backend.log` o la terminal donde corre uvicorn
-- Verificar que no haya errores de migración
+## 📜 Licencia
 
-### Frontend no conecta con backend
+Uso **académico y educativo**.  
+El código y la documentación son propiedad de sus autores.  
+Queda prohibido el uso comercial sin autorización expresa.
 
-- Verificar que el backend esté corriendo en `http://localhost:8000`
-- Vite proxy redirige `/api/*` a `http://localhost:8000` (configurado en `vite.config.ts`)
-- No abrir el frontend directamente como archivo HTML
+---
 
-### Cookies y sesión
+## 🙏 Agradecimientos
 
-- El backend usa cookies httpOnly con SameSite=Lax
-- Asegurarse de que el frontend acceda a `localhost:5173` (no a otra IP o puerto)
-
-### Migraciones pendientes
-
-```powershell
-cd backend
-.\.venv\Scripts\Activate.ps1
-alembic current    # Ver qué migración está aplicada
-alembic upgrade head   # Aplicar pendientes
-```
-
-### API key de OpenRouter faltante
-
-- Obtener key en https://openrouter.ai/keys
-- Configurar `OPENROUTER_API_KEY` en `backend/.env`
-- Verificar que el modelo configurado exista en OpenRouter
-
-### PowerShell bloquea Activate.ps1
-
-```powershell
-Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
-```
-
-## Seguridad
-
-- El archivo `.env` está en `.gitignore` y nunca se sube al repositorio.
-- Los archivos `.env.example` contienen solo valores de ejemplo, no secretos reales.
-- En producción (`APP_ENV=production`), el backend valida que `JWT_SECRET` no sea el valor por defecto.
-- Las passwords se hashean con bcrypt.
-- Las sesiones usan JWT con cookies httpOnly.
-- CORS está restringido por `CORS_ORIGINS`.
-
-> **Importante**: Si encontraste una API key o password real en el repositorio, revocala inmediatamente en el servicio correspondiente y configura un nuevo valor en tu `.env` local.
-
-## Licencia
-
-Proyecto privado. Todos los derechos reservados.
+- **OpenRouter** por el acceso gratuito a Nemotron-3-Ultra
+- **Comunidad FastAPI / SQLAlchemy / React** por tooling de primer nivel
+- **Datos vehiculares** agregados de fuentes públicas anonimizadas

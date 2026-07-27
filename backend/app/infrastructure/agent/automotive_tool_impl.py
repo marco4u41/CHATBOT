@@ -54,7 +54,10 @@ class SqlAlchemyAutomotiveAgentTool(AutomotiveAgentTool):
             return None
 
         lines = ["[VEHICLE_SEARCH_RESULTS]"]
+        lines.append(f"FUENTE: Datos confirmados en la base de datos")
         lines.append(f"Resultados: {len(vehicles)} vehículo(s) encontrado(s)")
+        if manufacturer:
+            lines.append(f"Filtro de marca aplicado: {manufacturer}")
         lines.append("")
 
         for i, v in enumerate(vehicles, 1):
@@ -90,6 +93,7 @@ class SqlAlchemyAutomotiveAgentTool(AutomotiveAgentTool):
             return None
 
         lines = ["[VEHICLE_DETAILS]"]
+        lines.append(f"FUENTE: Datos confirmados en la base de datos")
         lines.append(f"Marca: {manufacturer} | Modelo: {model}")
         if year:
             lines.append(f"Año filtrado: {year}")

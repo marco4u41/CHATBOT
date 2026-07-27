@@ -13,7 +13,7 @@ interface MessageBubbleProps {
 
 const markdownComponents: Components = {
   pre: ({ children }) => (
-    <pre className="bg-obsidian-deep/80 text-gray-100 rounded-xl p-4 my-3 overflow-x-auto text-sm border border-gold-premium/[0.08] shadow-input-recessed">
+    <pre className="bg-ax-bg-deep/80 text-gray-100 rounded-xl p-4 my-3 overflow-x-auto text-sm border border-ax-gold/[0.08] shadow-ax-inset">
       {children}
     </pre>
   ),
@@ -22,7 +22,7 @@ const markdownComponents: Components = {
     if (isInline) {
       return (
         <code
-          className="bg-gold-premium/[0.08] text-gold-light px-1.5 py-0.5 rounded text-sm font-mono border border-gold-premium/10"
+          className="bg-ax-gold/[0.08] text-ax-gold-light px-1.5 py-0.5 rounded text-sm font-ax-mono border border-ax-gold/10"
           {...props}
         >
           {children}
@@ -36,49 +36,49 @@ const markdownComponents: Components = {
     );
   },
   table: ({ children }) => (
-    <div className="my-4 overflow-x-auto rounded-xl border border-gold-premium/[0.08] bg-obsidian-deep/50">
+    <div className="my-4 overflow-x-auto rounded-xl border border-ax-gold/[0.08] bg-ax-bg-deep/50">
       <table className="w-full text-sm">{children}</table>
     </div>
   ),
   thead: ({ children }) => <thead>{children}</thead>,
   tbody: ({ children }) => <tbody>{children}</tbody>,
   tr: ({ children }) => (
-    <tr className="border-b border-white/[0.04] transition-colors hover:bg-gold-premium/[0.03] last:border-b-0">
+    <tr className="border-b border-white/[0.04] transition-colors hover:bg-ax-gold/[0.03] last:border-b-0">
       {children}
     </tr>
   ),
   th: ({ children }) => (
-    <th className="px-4 py-3 text-left font-semibold text-gold-premium/85 bg-gold-premium/[0.04] border-b border-gold-premium/15 text-[0.7rem] tracking-wider uppercase">
+    <th className="px-4 py-3 text-left font-semibold text-ax-gold/85 bg-ax-gold/[0.04] border-b border-ax-gold/15 text-[0.7rem] tracking-wider uppercase">
       {children}
     </th>
   ),
   td: ({ children }) => (
-    <td className="px-4 py-3 text-left text-white/75">{children}</td>
+    <td className="px-4 py-3 text-left text-ax-text-secondary">{children}</td>
   ),
   hr: () => (
-    <hr className="border-none h-px my-5 bg-gradient-to-r from-transparent via-gold-premium/20 to-transparent" />
+    <hr className="border-none h-px my-5 bg-gradient-to-r from-transparent via-ax-gold/20 to-transparent" />
   ),
   blockquote: ({ children }) => (
-    <blockquote className="pl-4 my-3 text-gray-400 italic border-l-2 border-gold-premium/30 bg-gold-premium/[0.03] py-2 pr-3 rounded-r-lg">
+    <blockquote className="pl-4 my-3 text-ax-text-muted italic border-l-2 border-ax-gold/30 bg-ax-gold/[0.03] py-2 pr-3 rounded-r-lg">
       {children}
     </blockquote>
   ),
   h1: ({ children }) => (
-    <h1 className="text-xl font-semibold mt-4 mb-2 text-gold-light">{children}</h1>
+    <h1 className="ax-text-heading text-xl mt-4 mb-2 text-ax-gold-light">{children}</h1>
   ),
   h2: ({ children }) => (
-    <h2 className="text-lg font-semibold mt-4 mb-2 text-gold-premium">{children}</h2>
+    <h2 className="ax-text-heading text-lg mt-4 mb-2 text-ax-gold">{children}</h2>
   ),
   h3: ({ children }) => (
-    <h3 className="text-base font-semibold mt-4 mb-2 text-gold-premium/80">{children}</h3>
+    <h3 className="ax-text-heading text-base mt-4 mb-2 text-ax-gold/80">{children}</h3>
   ),
   strong: ({ children }) => (
-    <strong className="text-white font-semibold">{children}</strong>
+    <strong className="text-ax-text-primary font-semibold">{children}</strong>
   ),
   a: ({ href, children }) => (
     <a
       href={href}
-      className="text-gold-premium underline underline-offset-2 hover:text-gold-light transition-colors"
+      className="text-ax-gold underline underline-offset-2 hover:text-ax-gold-light transition-colors"
       target="_blank"
       rel="noopener noreferrer"
     >
@@ -93,7 +93,7 @@ export function MessageBubble({ message, isStreaming = false }: MessageBubblePro
   return (
     <div
       className={cn(
-        "flex animate-slide-up",
+        "flex animate-ax-slide-up",
         isUser ? "justify-end" : "justify-start",
       )}
       role="article"
@@ -104,14 +104,10 @@ export function MessageBubble({ message, isStreaming = false }: MessageBubblePro
           "max-w-[80%] rounded-2xl px-4 py-3 text-sm",
           isUser
             ? cn(
-                "bg-obsidian-card backdrop-blur-xl border border-white/[0.08] text-white rounded-br-md",
-                "shadow-[0_4px_20px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.06),inset_0_-1px_0_rgba(0,0,0,0.2)]",
-                "before:content-[''] before:absolute before:inset-0 before:rounded-[inherit] before:p-px",
-                "before:bg-gradient-to-b before:from-white/[0.08] before:to-transparent before:mask-composite-exclude before:[-webkit-mask-composite:xor]",
-                "relative",
+                "ax-glass text-ax-text-primary rounded-br-md",
               )
             : cn(
-                "premium-liquid-glass rounded-bl-md text-white/80",
+                "ax-glass--light rounded-bl-md text-ax-text-secondary",
               ),
         )}
       >
@@ -142,16 +138,6 @@ function MessageContent({
         if (segment.type === "car") {
           return (
             <div key={`car-${i}`} className="my-3">
-              {segment.markdownBefore.trim() && (
-                <div className="mb-2">
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    components={markdownComponents}
-                  >
-                    {segment.markdownBefore}
-                  </ReactMarkdown>
-                </div>
-              )}
               <CarCard
                 brand={segment.data.brand}
                 model={segment.data.model}
@@ -179,7 +165,7 @@ function MessageContent({
 
       {isStreaming && (
         <span
-          className="inline-block w-[3px] h-4 bg-gold-premium animate-pulse ml-0.5 rounded-full"
+          className="inline-block w-[3px] h-4 bg-ax-gold animate-ax-pulse-wine ml-0.5 rounded-full"
           aria-hidden="true"
         />
       )}

@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import type { VehicleScores } from "@/types/vehicle";
 import { useGarageStore } from "@/stores/garageStore";
+import { safeDisplay } from "@/utils/specNormalization";
 import { cn } from "@/utils/cn";
 
 interface CarCardProps {
@@ -48,8 +49,8 @@ export function CarCard({
     setTilt({ rotateX: 0, rotateY: 0 });
   }, []);
 
-  function handleAddToGarage() {
-    const added = addToGarage({
+  async function handleAddToGarage() {
+    const result = await addToGarage({
       brand,
       model,
       year,
@@ -59,14 +60,14 @@ export function CarCard({
       price_usd,
       scores,
     });
-    if (!added) return;
+    if (!result.ok) return;
   }
 
   const badgeData: { label: string; icon: string }[] = [];
-  if (engine) badgeData.push({ label: engine, icon: "⚙" });
-  if (transmission) badgeData.push({ label: transmission, icon: "⟳" });
-  if (fuel_type) badgeData.push({ label: fuel_type, icon: "⛽" });
-  if (price_usd) badgeData.push({ label: `$${price_usd.toLocaleString()}`, icon: "💰" });
+  if (engine) badgeData.push({ label: safeDisplay(engine), icon: "⚙" });
+  if (transmission) badgeData.push({ label: safeDisplay(transmission), icon: "⟳" });
+  if (fuel_type) badgeData.push({ label: safeDisplay(fuel_type), icon: "⛽" });
+  if (price_usd != null) badgeData.push({ label: `$${price_usd.toLocaleString()}`, icon: "💰" });
 
   return (
     <div className="perspective-800">
@@ -75,28 +76,28 @@ export function CarCard({
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         className={cn(
-          "tilt-card liquid-glass-panel rounded-2xl overflow-hidden",
+          "ax-glass rounded-2xl overflow-hidden",
           "transition-all duration-150 ease-out",
-          "animate-tilt-in",
+          "animate-ax-scale-in",
         )}
         style={{
           transform: `rotateX(${tilt.rotateX}deg) rotateY(${tilt.rotateY}deg)`,
         }}
       >
         {/* Header glow line */}
-        <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-neon-blue/50 to-transparent" />
+        <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-ax-accent-info/50 to-transparent" />
 
         <div className="p-5">
           {/* Title */}
           <div className="flex items-start justify-between mb-4">
             <div>
-              <h3 className="text-lg font-bold text-white tracking-tight">
+              <h3 className="text-lg font-bold text-ax-text-primary tracking-tight">
                 {brand} {model}
               </h3>
-              <p className="text-sm text-white/40 font-mono mt-0.5">{year}</p>
+              <p className="text-sm text-ax-text-muted font-mono mt-0.5">{year}</p>
             </div>
             {price_usd && (
-              <span className="text-neon-green font-mono text-sm font-semibold px-2 py-1 glass-badge rounded-lg">
+              <span className="text-ax-accent-success font-mono text-sm font-semibold px-2 py-1 ax-badge rounded-lg">
                 ${price_usd.toLocaleString()}
               </span>
             )}
@@ -108,7 +109,7 @@ export function CarCard({
               {badgeData.map((badge) => (
                 <span
                   key={badge.label}
-                  className="glass-badge rounded-full px-2.5 py-1 text-xs text-white/70 font-medium"
+                  className="ax-badge rounded-full px-2.5 py-1 text-xs text-ax-text-secondary font-medium"
                 >
                   <span className="mr-1">{badge.icon}</span>
                   {badge.label}
@@ -132,8 +133,8 @@ export function CarCard({
               className={cn(
                 "flex-1 rounded-xl px-3 py-2.5 text-xs font-semibold transition-all duration-200",
                 inGarage
-                  ? "bg-white/5 text-white/30 border border-white/5 cursor-not-allowed"
-                  : "neon-button text-neon-blue hover:text-white",
+                  ? "bg-ax-surface-light text-ax-text-muted border border-ax-border-subtle cursor-not-allowed"
+                  : "bg-ax-accent-info text-white hover:bg-ax-accent-info/90",
               )}
             >
               {inGarage ? "En el Garaje" : "+ Garaje"}
@@ -142,7 +143,7 @@ export function CarCard({
               onClick={() => setShowSpecs(!showSpecs)}
               className={cn(
                 "rounded-xl px-3 py-2.5 text-xs font-semibold transition-all duration-200",
-                "skeuo-button text-white/60 hover:text-white",
+                "ax-glass text-ax-text-secondary hover:text-ax-text-primary",
               )}
             >
               {showSpecs ? "Ocultar" : "Ficha"}
@@ -151,17 +152,15 @@ export function CarCard({
 
           {/* Expandable Specs */}
           {showSpecs && (
-            <div className="mt-4 animate-slide-up">
-              <div className="liquid-glass-panel-dense rounded-xl p-4 space-y-2">
-                <SpecRow label="Marca" value={brand} />
-                <SpecRow label="Modelo" value={model} />
+            <div className="mt-4 animate-ax-slide-up">
+              <div className="ax-glass--light rounded-xl p-4 space-y-2">
+                <SpecRow label="Marca" value={safeDisplay(brand)} />
+                <SpecRow label="Modelo" value={safeDisplay(model)} />
                 <SpecRow label="Año" value={String(year)} />
-                {engine && <SpecRow label="Motor" value={engine} />}
-                {transmission && <SpecRow label="Transmisión" value={transmission} />}
-                {fuel_type && <SpecRow label="Combustible" value={fuel_type} />}
-                {price_usd && (
-                  <SpecRow label="Precio" value={`$${price_usd.toLocaleString()}`} />
-                )}
+                <SpecRow label="Motor" value={safeDisplay(engine)} />
+                <SpecRow label="Transmisión" value={safeDisplay(transmission)} />
+                <SpecRow label="Combustible" value={safeDisplay(fuel_type)} />
+                <SpecRow label="Precio" value={price_usd != null ? `$${price_usd.toLocaleString()}` : "No disponible"} />
               </div>
             </div>
           )}
@@ -174,8 +173,8 @@ export function CarCard({
 function SpecRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between text-xs">
-      <span className="text-white/40">{label}</span>
-      <span className="text-white/80 font-medium">{value}</span>
+      <span className="text-ax-text-muted">{label}</span>
+      <span className="text-ax-text-primary font-medium">{value}</span>
     </div>
   );
 }
@@ -283,7 +282,7 @@ function RadarChart({ scores, size }: { scores: VehicleScores; size: number }) {
             y={center + labelR * Math.sin(angle)}
             textAnchor="middle"
             dominantBaseline="central"
-            className="fill-white/40 text-[8px]"
+            className="fill-ax-text-muted text-[8px]"
           >
             {axis.label}
           </text>

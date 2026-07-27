@@ -7,6 +7,15 @@ export interface Vehicle {
   fuel_type?: string;
   mileage_km?: number;
   price_usd?: number;
+  body_type?: string;
+  drive?: string;
+  condition?: string;
+  color?: string;
+  cylinders?: number;
+  passengers?: number;
+  consumption?: string;
+  advantages?: string[];
+  disadvantages?: string[];
 }
 
 export interface GarageVehicle extends Vehicle {

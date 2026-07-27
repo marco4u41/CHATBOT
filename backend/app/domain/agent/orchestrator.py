@@ -216,8 +216,9 @@ class AgentOrchestrator:
     ) -> list[str]:
         """Fetch data for RECOMMENDATION intent.
 
-        Uses search_vehicles() with budget/usage filters to find
+        Uses search_vehicles() with budget/usage/brand filters to find
         real vehicles matching the user's criteria.
+        Strictly filters by manufacturer when the user specifies a brand.
         """
         blocks: list[str] = []
 
@@ -231,7 +232,17 @@ class AgentOrchestrator:
         if user_context.engine_type:
             fuel = user_context.engine_type
 
+        # Extract strict brand filter from user context or message
+        manufacturer = None
+        if user_context.mentioned_brands:
+            # Use the first mentioned brand as the strict filter
+            manufacturer = user_context.mentioned_brands[0]
+        elif user_context.vehicles:
+            # Use the brand from the user's primary vehicle
+            manufacturer = user_context.vehicles[0].brand
+
         search_result = await self._automotive_tool.search_vehicles(
+            manufacturer=manufacturer,
             max_price=max_price,
             vehicle_type=vehicle_type,
             fuel=fuel,
@@ -240,6 +251,24 @@ class AgentOrchestrator:
         if search_result:
             blocks.append(search_result.content)
             fetched.add("search")
+
+        # Also search without brand filter if results are insufficient
+        # This gives the AI context about what's available overall
+        if not search_result and manufacturer:
+            unfiltered_result = await self._automotive_tool.search_vehicles(
+                max_price=max_price,
+                vehicle_type=vehicle_type,
+                fuel=fuel,
+                limit=5,
+            )
+            if unfiltered_result:
+                blocks.append(
+                    f"[SEARCH_CONTEXT_SIN_FILTRO]\n"
+                    f"No se encontraron resultados para {manufacturer}. "
+                    f"Resultados generales disponibles:\n\n"
+                    f"{unfiltered_result.content}"
+                )
+                fetched.add("search_unfiltered")
 
         for vehicle in user_context.vehicles[:2]:
             brand = vehicle.brand.strip()

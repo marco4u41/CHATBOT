@@ -12,32 +12,32 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary: cn(
-    "bg-gradient-to-br from-neon-blue/20 to-neon-blue/5",
-    "border border-neon-blue/30 text-neon-blue",
-    "hover:from-neon-blue/30 hover:to-neon-blue/10",
-    "hover:shadow-neon-blue",
+    "bg-gradient-to-br from-ax-accent-info/20 to-ax-accent-info/5",
+    "border border-ax-accent-info/30 text-ax-accent-info",
+    "hover:from-ax-accent-info/30 hover:to-ax-accent-info/10",
+    "hover:shadow-[0_0_15px_rgba(0,240,255,0.2)]",
     "active:scale-[0.97]",
   ),
   secondary: cn(
-    "liquid-glass-panel-dense",
-    "text-white/70 hover:text-white",
-    "hover:bg-white/8",
+    "ax-glass--light",
+    "text-ax-text-secondary hover:text-ax-text-primary",
+    "hover:bg-ax-surface-light",
     "active:scale-[0.97]",
   ),
   ghost: cn(
-    "bg-transparent text-white/50",
-    "hover:text-white hover:bg-white/5",
+    "bg-transparent text-ax-text-secondary",
+    "hover:text-ax-text-primary hover:bg-ax-surface-light",
     "active:scale-[0.97]",
   ),
   danger: cn(
-    "bg-gradient-to-br from-neon-red/20 to-neon-red/5",
-    "border border-neon-red/30 text-neon-red",
-    "hover:from-neon-red/30 hover:to-neon-red/10",
+    "bg-gradient-to-br from-ax-accent-danger/20 to-ax-accent-danger/5",
+    "border border-ax-accent-danger/30 text-ax-accent-danger",
+    "hover:from-ax-accent-danger/30 hover:to-ax-accent-danger/10",
     "active:scale-[0.97]",
   ),
-  neon: "neon-button text-neon-blue",
-  "neon-orange": "neon-button-orange text-neon-orange",
-  "skeuomorphic-gold": "skeuo-gold-button",
+  neon: "bg-ax-accent-info text-white",
+  "neon-orange": "bg-ax-accent-warning text-black",
+  "skeuomorphic-gold": "bg-gradient-to-b from-ax-accent-warning/90 to-ax-accent-warning text-black",
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
@@ -65,7 +65,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={disabled || isLoading}
         className={cn(
           "inline-flex items-center justify-center font-semibold transition-all duration-200",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-premium/50 focus-visible:ring-offset-2 focus-visible:ring-offset-obsidian-deep",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ax-accent-warning/50 focus-visible:ring-offset-2 focus-visible:ring-offset-ax-bg-primary",
           "disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none",
           variantStyles[variant],
           sizeStyles[size],
@@ -77,7 +77,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           <svg
             className={cn(
               "mr-2 h-3.5 w-3.5 animate-spin",
-              variant === "skeuomorphic-gold" ? "text-gold-premium" : "text-current",
+              variant === "skeuomorphic-gold" ? "text-ax-accent-warning" : "text-current",
             )}
             xmlns="http://www.w3.org/2000/svg"
             fill="none"

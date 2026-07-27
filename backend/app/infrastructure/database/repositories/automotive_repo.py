@@ -244,6 +244,217 @@ class SqlAlchemyAutomotiveRepository(AutomotiveRepository):
             logger.exception("list_brands query failed")
             return []
 
+    async def count_by_type(self) -> list[dict[str, object]]:
+        stmt = (
+            select(
+                VehicleMasterModel.type_mode,
+                func.count().label("count"),
+                func.avg(VehicleMasterModel.price_median).label(
+                    "avg_price"
+                ),
+            )
+            .group_by(VehicleMasterModel.type_mode)
+            .order_by(func.count().desc())
+        )
+        try:
+            result = await self._session.execute(stmt)
+            return [
+                {
+                    "vehicle_type": row[0],
+                    "count": row[1],
+                    "avg_price": (
+                        float(row[2]) if row[2] else None
+                    ),
+                }
+                for row in result.all()
+            ]
+        except SQLAlchemyError:
+            logger.exception("count_by_type query failed")
+            return []
+
+    async def count_by_fuel(self) -> list[dict[str, object]]:
+        stmt = (
+            select(
+                VehicleMasterModel.fuel_mode,
+                func.count().label("count"),
+                func.avg(VehicleMasterModel.price_median).label(
+                    "avg_price"
+                ),
+            )
+            .group_by(VehicleMasterModel.fuel_mode)
+            .order_by(func.count().desc())
+        )
+        try:
+            result = await self._session.execute(stmt)
+            return [
+                {
+                    "fuel": row[0],
+                    "count": row[1],
+                    "avg_price": (
+                        float(row[2]) if row[2] else None
+                    ),
+                }
+                for row in result.all()
+            ]
+        except SQLAlchemyError:
+            logger.exception("count_by_fuel query failed")
+            return []
+
+    async def count_by_transmission(self) -> list[dict[str, object]]:
+        stmt = (
+            select(
+                VehicleMasterModel.transmission_mode,
+                func.count().label("count"),
+            )
+            .group_by(VehicleMasterModel.transmission_mode)
+            .order_by(func.count().desc())
+        )
+        try:
+            result = await self._session.execute(stmt)
+            return [
+                {
+                    "transmission": row[0],
+                    "count": row[1],
+                }
+                for row in result.all()
+            ]
+        except SQLAlchemyError:
+            logger.exception("count_by_transmission query failed")
+            return []
+
+    async def avg_price_by_year(self) -> list[dict[str, object]]:
+        stmt = (
+            select(
+                VehicleMasterModel.year,
+                func.count().label("count"),
+                func.avg(VehicleMasterModel.price_median).label(
+                    "avg_price"
+                ),
+            )
+            .group_by(VehicleMasterModel.year)
+            .order_by(VehicleMasterModel.year.asc())
+        )
+        try:
+            result = await self._session.execute(stmt)
+            return [
+                {
+                    "year": row[0],
+                    "count": row[1],
+                    "avg_price": (
+                        float(row[2]) if row[2] else None
+                    ),
+                }
+                for row in result.all()
+            ]
+        except SQLAlchemyError:
+            logger.exception("avg_price_by_year query failed")
+            return []
+
+    async def price_distribution(self) -> list[dict[str, object]]:
+        ranges = [
+            ("0-10000", 0, 10000),
+            ("10000-20000", 10000, 20000),
+            ("20000-30000", 20000, 30000),
+            ("30000-50000", 30000, 50000),
+            ("50000-75000", 50000, 75000),
+            ("75000-100000", 75000, 100000),
+            ("100000+", 100000, None),
+        ]
+        try:
+            result_list: list[dict[str, object]] = []
+            for label, low, high in ranges:
+                stmt = select(func.count()).select_from(
+                    VehicleMasterModel
+                ).where(
+                    VehicleMasterModel.price_median.isnot(None),
+                    VehicleMasterModel.price_median >= low,
+                )
+                if high is not None:
+                    stmt = stmt.where(
+                        VehicleMasterModel.price_median < high
+                    )
+                count_result = await self._session.execute(stmt)
+                count = count_result.scalar() or 0
+                result_list.append({
+                    "price_range": label,
+                    "count": count,
+                })
+            return result_list
+        except SQLAlchemyError:
+            logger.exception("price_distribution query failed")
+            return []
+
+    async def vehicle_overview(self) -> dict[str, object]:
+        try:
+            total_stmt = select(
+                func.count()
+            ).select_from(VehicleMasterModel)
+            total_result = await self._session.execute(
+                total_stmt
+            )
+            total_vehicles = total_result.scalar() or 0
+
+            avg_stmt = select(
+                func.avg(VehicleMasterModel.price_median)
+            ).select_from(VehicleMasterModel)
+            avg_result = await self._session.execute(avg_stmt)
+            avg_price_raw = avg_result.scalar()
+            avg_price = (
+                float(avg_price_raw) if avg_price_raw else None
+            )
+
+            brands_stmt = select(
+                func.count(
+                    func.distinct(VehicleMasterModel.manufacturer)
+                )
+            )
+            brands_result = await self._session.execute(
+                brands_stmt
+            )
+            total_brands = brands_result.scalar() or 0
+
+            models_stmt = select(
+                func.count(func.distinct(
+                    func.concat(
+                        VehicleMasterModel.manufacturer,
+                        " ",
+                        VehicleMasterModel.model,
+                    )
+                ))
+            )
+            models_result = await self._session.execute(
+                models_stmt
+            )
+            total_models = models_result.scalar() or 0
+
+            return {
+                "total_vehicles": total_vehicles,
+                "avg_price": avg_price,
+                "total_brands": total_brands,
+                "total_models": total_models,
+            }
+        except SQLAlchemyError:
+            logger.exception("vehicle_overview query failed")
+            return {
+                "total_vehicles": 0,
+                "avg_price": None,
+                "total_brands": 0,
+                "total_models": 0,
+            }
+
+    async def brand_ranking(self, limit: int = 10) -> list[BrandSummary]:
+        stmt = (
+            select(BrandModel)
+            .order_by(BrandModel.total_listings.desc().nullslast())
+            .limit(limit)
+        )
+        try:
+            result = await self._session.execute(stmt)
+            return [map_brand(b) for b in result.scalars().all()]
+        except SQLAlchemyError:
+            logger.exception("brand_ranking query failed")
+            return []
+
     async def health_check(self) -> bool:
         try:
             await self._session.execute(select(func.count()).select_from(BrandModel))

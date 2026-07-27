@@ -8,7 +8,7 @@ export function Skeleton({ className }: SkeletonProps) {
   return (
     <div
       className={cn(
-        "rounded-xl bg-white/5 shimmer",
+        "rounded-xl bg-ax-surface animate-ax-shimmer",
         className,
       )}
       aria-hidden="true"

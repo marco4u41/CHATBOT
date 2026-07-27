@@ -46,44 +46,102 @@
 }
 
 @layer components {
-  /* ── Liquid Glass Panel ── */
-  .liquid-glass-panel {
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(20px) saturate(1.4);
-    -webkit-backdrop-filter: blur(20px) saturate(1.4);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+  /* ══════════════════════════════════════════════════════════════════════════
+     AutoExpert AI — Design System v1.0 (Concept C: Luxury Performance)
+     Prefixed with `ax-` to avoid conflicts with legacy classes.
+     ══════════════════════════════════════════════════════════════════════════ */
+
+  /* ── Glass Material (liquid glass with cool undertone) ── */
+  .ax-glass {
+    background: rgba(15, 18, 24, 0.72);
+    backdrop-filter: blur(16px) saturate(1.4);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow:
-      0 8px 32px 0 rgba(0, 0, 0, 0.37),
-      inset 0 1px 0 0 rgba(255, 255, 255, 0.15),
-      inset 0 -1px 0 0 rgba(0, 0, 0, 0.4);
+      0 8px 32px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.2);
   }
 
-  .liquid-glass-panel-dense {
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(24px) saturate(1.6);
-    -webkit-backdrop-filter: blur(24px) saturate(1.6);
-    border: 1px solid rgba(255, 255, 255, 0.14);
+  .ax-glass--light {
+    background: rgba(23, 28, 36, 0.65);
+    backdrop-filter: blur(20px) saturate(1.5);
+    -webkit-backdrop-filter: blur(20px) saturate(1.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow:
-      0 4px 24px 0 rgba(0, 0, 0, 0.4),
-      inset 0 1px 0 0 rgba(255, 255, 255, 0.18),
-      inset 0 -1px 0 0 rgba(0, 0, 0, 0.3);
+      0 4px 24px rgba(0, 0, 0, 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
   }
 
-  /* ── Premium Golden Liquid Glass ── */
-  .premium-liquid-glass {
-    background: rgba(15, 17, 21, 0.7);
-    backdrop-filter: blur(24px) saturate(1.6);
-    -webkit-backdrop-filter: blur(24px) saturate(1.6);
-    border: 1px solid transparent;
-    background-clip: padding-box;
+  .ax-glass--solid {
+    background: rgba(15, 18, 24, 0.92);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
     box-shadow:
-      0 20px 60px -15px rgba(0, 0, 0, 0.6),
-      inset 0 1px 0 0 rgba(255, 255, 255, 0.08),
-      inset 0 -1px 0 0 rgba(0, 0, 0, 0.3);
+      0 4px 20px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+
+  /* ── Metal / Brushed Aluminum ── */
+  .ax-metal {
+    background: linear-gradient(
+      135deg,
+      rgba(23, 28, 36, 0.95),
+      rgba(15, 18, 24, 0.98)
+    );
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow:
+      0 2px 8px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+
+  .ax-metal::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.01) 0px,
+      transparent 1px,
+      transparent 3px
+    );
+    pointer-events: none;
+    opacity: 0.5;
+  }
+
+  /* ── Carbon Fiber Texture ── */
+  .ax-carbon {
     position: relative;
   }
 
-  .premium-liquid-glass::before {
+  .ax-carbon::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: repeating-linear-gradient(
+      45deg,
+      rgba(255, 255, 255, 0.015) 25%,
+      transparent 25%,
+      transparent 75%,
+      rgba(255, 255, 255, 0.015) 75%
+    );
+    background-size: 4px 4px;
+    opacity: 0.6;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── Premium Gradient Border ── */
+  .ax-premium-border {
+    position: relative;
+    border: 1px solid transparent;
+    background-clip: padding-box;
+  }
+
+  .ax-premium-border::before {
     content: "";
     position: absolute;
     inset: 0;
@@ -91,10 +149,9 @@
     padding: 1px;
     background: linear-gradient(
       135deg,
-      rgba(212, 175, 55, 0.2),
-      rgba(243, 229, 171, 0.06),
-      rgba(212, 175, 55, 0.08),
-      rgba(243, 229, 171, 0.12)
+      rgba(184, 134, 11, 0.3),
+      rgba(212, 168, 67, 0.08),
+      rgba(184, 134, 11, 0.15)
     );
     mask:
       linear-gradient(#fff 0 0) content-box,
@@ -107,192 +164,62 @@
     pointer-events: none;
   }
 
-  /* ── Skeuomorphic Gold Button ── */
-  .skeuo-gold-button {
-    background: linear-gradient(
-      145deg,
-      rgba(20, 22, 28, 0.95),
-      rgba(12, 14, 18, 0.98)
-    );
-    border: 1px solid rgba(212, 175, 55, 0.2);
-    box-shadow:
-      2px 3px 6px rgba(0, 0, 0, 0.5),
-      inset 1px 1px 2px rgba(243, 229, 171, 0.12),
-      inset -1px -1px 2px rgba(0, 0, 0, 0.3),
-      0 0 12px rgba(212, 175, 55, 0.06);
-    color: rgba(212, 175, 55, 0.9);
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  /* ── Layout: Page Container ── */
+  .ax-page {
+    min-height: 100vh;
+    padding: 1.5rem;
     position: relative;
-    overflow: hidden;
+    overflow-x: hidden;
   }
 
-  .skeuo-gold-button::after {
-    content: "";
-    position: absolute;
+  /* ── Layout: Content Container ── */
+  .ax-content {
+    max-width: 72rem;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  /* ── Layout: Section ── */
+  .ax-section {
+    margin-bottom: 2rem;
+  }
+
+  /* ── Ambient Background ── */
+  .ax-ambient-bg {
+    position: fixed;
     inset: 0;
-    background: linear-gradient(
-      180deg,
-      rgba(243, 229, 171, 0.06) 0%,
-      transparent 40%,
-      transparent 60%,
-      rgba(0, 0, 0, 0.15) 100%
-    );
-    pointer-events: none;
-    border-radius: inherit;
-  }
-
-  .skeuo-gold-button:hover {
-    background: linear-gradient(
-      145deg,
-      rgba(28, 30, 38, 0.95),
-      rgba(18, 20, 26, 0.98)
-    );
-    border-color: rgba(212, 175, 55, 0.35);
-    box-shadow:
-      2px 3px 8px rgba(0, 0, 0, 0.6),
-      inset 1px 1px 3px rgba(243, 229, 171, 0.15),
-      inset -1px -1px 2px rgba(0, 0, 0, 0.3),
-      0 0 20px rgba(212, 175, 55, 0.1);
-    color: rgba(243, 229, 171, 1);
-    transform: translateY(-1px);
-  }
-
-  .skeuo-gold-button:active {
-    transform: scale(0.98) translateY(0);
-    box-shadow:
-      inset 2px 3px 6px rgba(0, 0, 0, 0.6),
-      inset -1px -1px 2px rgba(243, 229, 171, 0.04),
-      0 0 8px rgba(212, 175, 55, 0.06);
-  }
-
-  /* ── Radial Gold Glow ── */
-  .radial-gold-glow {
+    z-index: -1;
     background: radial-gradient(
       ellipse at center,
-      rgba(212, 175, 55, 0.08) 0%,
-      rgba(212, 175, 55, 0.03) 40%,
+      rgba(111, 38, 64, 0.03) 0%,
       transparent 70%
     );
+    animation: axAmbient 12s ease-in-out infinite;
+    pointer-events: none;
   }
 
-  /* ── Skeuomorphic Button ── */
-  .skeuo-button {
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.01));
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow:
-      2px 2px 5px rgba(0, 0, 0, 0.4),
-      inset 1px 1px 2px rgba(255, 255, 255, 0.1);
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .skeuo-button:hover {
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.03));
-    box-shadow:
-      2px 2px 8px rgba(0, 0, 0, 0.5),
-      inset 1px 1px 3px rgba(255, 255, 255, 0.15);
-  }
-
-  .skeuo-button:active {
-    box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.5);
-    transform: scale(0.97);
-  }
-
-  /* ── Neon Button ── */
-  .neon-button {
-    @apply relative overflow-hidden;
-    background: linear-gradient(135deg, rgba(0, 240, 255, 0.15), rgba(0, 240, 255, 0.05));
-    border: 1px solid rgba(0, 240, 255, 0.3);
-    box-shadow:
-      0 0 15px rgba(0, 240, 255, 0.15),
-      inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .neon-button:hover {
-    background: linear-gradient(135deg, rgba(0, 240, 255, 0.25), rgba(0, 240, 255, 0.1));
-    box-shadow:
-      0 0 25px rgba(0, 240, 255, 0.25),
-      0 0 50px rgba(0, 240, 255, 0.1),
-      inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
-    transform: translateY(-1px);
-  }
-
-  .neon-button:active {
-    transform: scale(0.97) translateY(0);
-    box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.3);
-  }
-
-  /* ── Neon Orange Button ── */
-  .neon-button-orange {
-    @apply relative overflow-hidden;
-    background: linear-gradient(135deg, rgba(255, 94, 0, 0.15), rgba(255, 94, 0, 0.05));
-    border: 1px solid rgba(255, 94, 0, 0.3);
-    box-shadow:
-      0 0 15px rgba(255, 94, 0, 0.15),
-      inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .neon-button-orange:hover {
-    background: linear-gradient(135deg, rgba(255, 94, 0, 0.25), rgba(255, 94, 0, 0.1));
-    box-shadow:
-      0 0 25px rgba(255, 94, 0, 0.25),
-      0 0 50px rgba(255, 94, 0, 0.1),
-      inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
-    transform: translateY(-1px);
-  }
-
-  .neon-button-orange:active {
-    transform: scale(0.97) translateY(0);
-    box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.3);
-  }
-
-  /* ── Glass Input (Console Recessed) ── */
-  .glass-input {
-    background: rgba(8, 10, 14, 0.9);
-    border: 1px solid rgba(212, 175, 55, 0.1);
-    box-shadow:
-      inset 0 3px 8px rgba(0, 0, 0, 0.7),
-      inset 0 1px 2px rgba(0, 0, 0, 0.5),
-      0 1px 0 rgba(255, 255, 255, 0.04);
-    transition: all 0.25s ease;
-  }
-
-  .glass-input:focus {
-    background: rgba(10, 12, 16, 0.95);
-    border-color: rgba(212, 175, 55, 0.3);
-    box-shadow:
-      inset 0 3px 8px rgba(0, 0, 0, 0.7),
-      inset 0 1px 2px rgba(0, 0, 0, 0.5),
-      0 0 20px rgba(212, 175, 55, 0.08),
-      0 1px 0 rgba(255, 255, 255, 0.04);
+  /* ── Focus Ring (accessible) ── */
+  .ax-focus-ring:focus-visible {
     outline: none;
+    box-shadow: 0 0 0 2px rgba(15, 18, 24, 1), 0 0 0 4px rgba(111, 38, 64, 0.4);
   }
 
-  /* ── Glass Badge ── */
-  .glass-badge {
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(8px);
-    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+  /* ── Scrollbar (dark, thin) ── */
+  .ax-scrollbar::-webkit-scrollbar {
+    width: 6px;
   }
 
-  /* ── Shimmer Effect ── */
-  .shimmer {
-    background: linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0) 0%,
-      rgba(255, 255, 255, 0.06) 50%,
-      rgba(255, 255, 255, 0) 100%
-    );
-    background-size: 200% 100%;
-    animation: shimmer 2s linear infinite;
+  .ax-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
   }
 
-  /* ── Tilt 3D Container ── */
-  .tilt-card {
-    transform-style: preserve-3d;
-    transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+  .ax-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(75, 85, 99, 0.4);
+    border-radius: 9999px;
+  }
+
+  .ax-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(75, 85, 99, 0.6);
   }
 
   /* ── Markdown Content (Premium Gold Theme) ── */
@@ -442,5 +369,50 @@
 
   .perspective-800 {
     perspective: 800px;
+  }
+
+  /* ═══ Design System v1.0 Utilities ═══ */
+
+  .ax-text-display {
+    font-family: "Playfair Display", Georgia, serif;
+    font-weight: 700;
+    font-style: italic;
+    letter-spacing: -0.01em;
+  }
+
+  .ax-text-heading {
+    font-family: "DM Sans", system-ui, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .ax-text-label {
+    font-family: "DM Sans", system-ui, sans-serif;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.6875rem;
+  }
+
+  .ax-text-data {
+    font-family: "IBM Plex Mono", "JetBrains Mono", monospace;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+  }
+
+  .ax-border-subtle {
+    border-color: rgba(255, 255, 255, 0.06);
+  }
+
+  .ax-border-default {
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .ax-border-strong {
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .ax-border-accent {
+    border-color: rgba(111, 38, 64, 0.2);
   }
 }

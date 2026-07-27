@@ -76,17 +76,17 @@ export function VehicleForm({
       {vehicles.map((vehicle, index) => (
         <div
           key={index}
-          className="liquid-glass-panel-dense rounded-xl p-4 space-y-3 animate-scale-glass"
+          className="ax-glass--light rounded-xl p-4 space-y-3 animate-ax-scale-in"
         >
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-bold text-white/50 uppercase tracking-wider">
+            <h3 className="text-xs font-bold text-ax-text-secondary uppercase tracking-wider">
               Vehiculo {index + 1}
             </h3>
             {vehicles.length > minVehicles && (
               <button
                 type="button"
                 onClick={() => removeVehicle(index)}
-                className="text-neon-red/40 hover:text-neon-red text-xs transition-colors"
+                className="text-ax-accent-danger/40 hover:text-ax-accent-danger text-xs transition-colors"
               >
                 Eliminar
               </button>
@@ -96,37 +96,45 @@ export function VehicleForm({
           <div className="grid grid-cols-2 gap-2.5">
             <input
               type="text"
+              id={`vehicle-brand-${index}`}
+              name={`vehicle-brand-${index}`}
               placeholder="Marca"
               value={vehicle.brand}
               onChange={(e) => updateVehicle(index, "brand", e.target.value)}
-              className="glass-input rounded-lg px-3 py-2 text-xs text-white placeholder:text-white/15"
+              className="ax-glass rounded-lg px-3 py-2 text-xs text-ax-text-primary placeholder:text-ax-text-muted/50"
               required
             />
             <input
               type="text"
+              id={`vehicle-model-${index}`}
+              name={`vehicle-model-${index}`}
               placeholder="Modelo"
               value={vehicle.model}
               onChange={(e) => updateVehicle(index, "model", e.target.value)}
-              className="glass-input rounded-lg px-3 py-2 text-xs text-white placeholder:text-white/15"
+              className="ax-glass rounded-lg px-3 py-2 text-xs text-ax-text-primary placeholder:text-ax-text-muted/50"
               required
             />
             <input
               type="number"
+              id={`vehicle-year-${index}`}
+              name={`vehicle-year-${index}`}
               placeholder="Ano"
               value={vehicle.year}
               onChange={(e) =>
                 updateVehicle(index, "year", Number(e.target.value))
               }
-              className="glass-input rounded-lg px-3 py-2 text-xs text-white placeholder:text-white/15"
+              className="ax-glass rounded-lg px-3 py-2 text-xs text-ax-text-primary placeholder:text-ax-text-muted/50"
               min={1900}
               max={2100}
             />
             <input
               type="text"
+              id={`vehicle-engine-${index}`}
+              name={`vehicle-engine-${index}`}
               placeholder="Motor (opcional)"
               value={vehicle.engine}
               onChange={(e) => updateVehicle(index, "engine", e.target.value)}
-              className="glass-input rounded-lg px-3 py-2 text-xs text-white placeholder:text-white/15"
+              className="ax-glass rounded-lg px-3 py-2 text-xs text-ax-text-primary placeholder:text-ax-text-muted/50"
             />
           </div>
         </div>
@@ -137,7 +145,7 @@ export function VehicleForm({
           <button
             type="button"
             onClick={addVehicle}
-            className="skeuo-button rounded-xl px-4 py-2.5 text-xs text-white/50 hover:text-white/80 transition-colors"
+            className="ax-glass rounded-xl px-4 py-2.5 text-xs text-ax-text-secondary hover:text-ax-text-primary transition-colors"
           >
             + Agregar vehiculo
           </button>
@@ -152,8 +160,8 @@ export function VehicleForm({
             "rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-wider transition-all duration-200",
             "disabled:opacity-30 disabled:cursor-not-allowed",
             vehicles.filter((v) => v.brand && v.model).length >= minVehicles && !disabled
-              ? "neon-button-orange text-neon-orange"
-              : "skeuo-button text-white/30",
+              ? "bg-ax-accent-warning text-black hover:bg-ax-accent-warning/90"
+              : "ax-glass text-ax-text-muted",
           )}
         >
           Comparar vehiculos

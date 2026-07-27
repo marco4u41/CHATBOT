@@ -20,7 +20,6 @@ export interface ContentSegment {
 export interface CarSegment {
   type: "car";
   data: ParsedCarBlock;
-  markdownBefore: string;
 }
 
 export type MessageSegment = ContentSegment | CarSegment;
@@ -46,12 +45,9 @@ export function parseMessageSegments(content: string): MessageSegment[] {
       const jsonStr = match[1] ?? "";
       const data: ParsedCarBlock = JSON.parse(jsonStr);
 
-      const markdownBefore = content.slice(lastIndex, matchStart);
-
       segments.push({
         type: "car",
         data,
-        markdownBefore,
       });
     } catch {
       segments.push({

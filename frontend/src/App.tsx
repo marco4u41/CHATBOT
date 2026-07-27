@@ -1,24 +1,127 @@
+import { useState, useRef, useEffect, useCallback } from "react";
 import { ChatWindow } from "@/components/chat/ChatWindow";
 import { Sidebar } from "@/components/sidebar/Sidebar";
 import { GarageSidebar } from "@/components/sidebar/GarageSidebar";
+import { DashboardPage } from "@/components/dashboard/DashboardPage";
+import { Header } from "@/components/layout/Header";
+import { AuthPage } from "@/components/auth/AuthPage";
+import { useAuthStore } from "@/stores/authStore";
+import { useGarageStore } from "@/stores/garageStore";
+import { cn } from "@/utils/cn";
 
 export default function App() {
-  return (
-    <div className="flex h-screen overflow-hidden bg-obsidian-deep relative">
-      {/* Liquid light orbs — ambient depth */}
-      <div
-        className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
-        aria-hidden="true"
-      >
-        <div className="absolute -top-1/4 -left-1/4 w-[60vw] h-[60vh] rounded-full bg-gold-premium/[0.03] blur-[120px] animate-liquid-orb-1" />
-        <div className="absolute -bottom-1/4 -right-1/4 w-[50vw] h-[50vh] rounded-full bg-gold-light/[0.02] blur-[100px] animate-liquid-orb-2" />
-        <div className="absolute top-1/3 left-1/2 w-[40vw] h-[40vh] rounded-full bg-gold-premium/[0.015] blur-[80px] animate-liquid-orb-3" />
-      </div>
+  const { isAuthenticated, isInitialized, checkSession, user } = useAuthStore();
+  const loadGarage = useGarageStore((s) => s.loadGarage);
+  const [view, setView] = useState<"chat" | "dashboard">("chat");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const chatViewRef = useRef<HTMLDivElement>(null);
+  const dashboardViewRef = useRef<HTMLDivElement>(null);
+  const dashboardHeaderRef = useRef<HTMLHeadingElement>(null);
+  const isAdmin = user?.is_admin ?? false;
 
-      <Sidebar />
-      <main className="flex-1 flex flex-col min-w-0 relative z-10">
-        <ChatWindow />
+  useEffect(() => {
+    checkSession();
+  }, [checkSession]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadGarage();
+    }
+  }, [isAuthenticated, loadGarage]);
+
+  const setViewStable = useCallback((v: "chat" | "dashboard") => {
+    // Prevent non-admin users from accessing dashboard
+    if (v === "dashboard" && !isAdmin) {
+      return;
+    }
+    setView(v);
+    setSidebarOpen(false);
+  }, [isAdmin]);
+
+  const toggleSidebar = useCallback(() => {
+    setSidebarOpen((o) => !o);
+  }, []);
+
+  const closeSidebar = useCallback(() => {
+    setSidebarOpen(false);
+  }, []);
+
+  useEffect(() => {
+    if (view === "chat") {
+      chatViewRef.current?.focus();
+    } else {
+      dashboardHeaderRef.current?.focus();
+    }
+  }, [view]);
+
+  if (!isInitialized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-ax-bg-deep">
+        <div className="ax-ambient-bg" aria-hidden="true" />
+        <div className="flex flex-col items-center gap-4 relative z-10">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-ax-accent-primary/20 to-ax-gold/10 flex items-center justify-center border border-ax-accent-primary/20 animate-ax-scale-in">
+            <svg className="h-8 w-8 text-ax-accent-primary/80 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+          </div>
+          <p className="text-xs text-ax-text-muted">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <AuthPage />;
+  }
+
+  return (
+    <div className="flex h-screen overflow-hidden bg-ax-bg-deep font-ax-sans">
+      {/* Ambient background */}
+      <div className="ax-ambient-bg" aria-hidden="true" />
+
+      <Sidebar
+        view={view}
+        onNavigate={setViewStable}
+        isMobileOpen={sidebarOpen}
+        onMobileClose={closeSidebar}
+      />
+
+      <main className="flex-1 flex flex-col min-w-0 relative z-10 min-h-0">
+        <Header view={view} onToggleSidebar={toggleSidebar} />
+
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          <div
+            ref={chatViewRef}
+            className={cn(
+              "flex-1 flex flex-col min-h-0",
+              view !== "chat" && "hidden",
+            )}
+            aria-hidden={view !== "chat" || undefined}
+            tabIndex={-1}
+          >
+            <ChatWindow />
+          </div>
+
+          <div
+            ref={dashboardViewRef}
+            className={cn(
+              "flex-1 flex flex-col min-h-0",
+              view !== "dashboard" && "hidden",
+            )}
+            aria-hidden={view !== "dashboard" || undefined}
+            tabIndex={-1}
+          >
+            {isAdmin && (
+              <DashboardPage
+                onNavigate={setViewStable}
+                headerRef={dashboardHeaderRef}
+              />
+            )}
+          </div>
+        </div>
       </main>
+
       <GarageSidebar />
     </div>
   );

@@ -10,34 +10,99 @@ class ApiClient {
   }
 
   async get<T>(path: string): Promise<ApiResponse<T>> {
-    const response = await fetch(`${this.baseUrl}${path}`);
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ detail: "Error desconocido" }));
-      return { success: false, error: error.detail || "Error del servidor" };
+    try {
+      const response = await fetch(`${this.baseUrl}${path}`, {
+        credentials: "include",
+      });
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ detail: "Error desconocido" }));
+        return { success: false, error: error.detail || "Error del servidor" };
+      }
+      return response.json();
+    } catch (err) {
+      if (err instanceof TypeError) {
+        return { success: false, error: "Error de conexion" };
+      }
+      return {
+        success: false,
+        error: err instanceof Error ? err.message : "Error desconocido",
+      };
     }
-    return response.json();
+  }
+
+  async getUnwrapped<T>(path: string): Promise<ApiResponse<T>> {
+    try {
+      const response = await fetch(`${this.baseUrl}${path}`, {
+        credentials: "include",
+      });
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ detail: "Error del servidor" }));
+        return { success: false, error: error.detail || "Error del servidor" };
+      }
+      const text = await response.text();
+      if (!text) {
+        return { success: false, error: "Respuesta vacia del servidor" };
+      }
+      const raw: unknown = JSON.parse(text);
+      return { success: true, data: raw as T };
+    } catch (err) {
+      if (err instanceof SyntaxError) {
+        return { success: false, error: "JSON invalido del servidor" };
+      }
+      if (err instanceof TypeError) {
+        return { success: false, error: "Error de conexion" };
+      }
+      return {
+        success: false,
+        error: err instanceof Error ? err.message : "Error desconocido",
+      };
+    }
   }
 
   async post<T>(path: string, body: unknown): Promise<ApiResponse<T>> {
-    const response = await fetch(`${this.baseUrl}${path}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ detail: "Error desconocido" }));
-      return { success: false, error: error.detail || "Error del servidor" };
+    try {
+      const response = await fetch(`${this.baseUrl}${path}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+        credentials: "include",
+      });
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ detail: "Error desconocido" }));
+        return { success: false, error: error.detail || "Error del servidor" };
+      }
+      return response.json();
+    } catch (err) {
+      if (err instanceof TypeError) {
+        return { success: false, error: "Error de conexion" };
+      }
+      return {
+        success: false,
+        error: err instanceof Error ? err.message : "Error desconocido",
+      };
     }
-    return response.json();
   }
 
   async delete(path: string): Promise<ApiResponse<null>> {
-    const response = await fetch(`${this.baseUrl}${path}`, { method: "DELETE" });
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ detail: "Error desconocido" }));
-      return { success: false, error: error.detail || "Error del servidor" };
+    try {
+      const response = await fetch(`${this.baseUrl}${path}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ detail: "Error desconocido" }));
+        return { success: false, error: error.detail || "Error del servidor" };
+      }
+      return response.json();
+    } catch (err) {
+      if (err instanceof TypeError) {
+        return { success: false, error: "Error de conexion" };
+      }
+      return {
+        success: false,
+        error: err instanceof Error ? err.message : "Error desconocido",
+      };
     }
-    return response.json();
   }
 
   streamChat(
@@ -58,6 +123,7 @@ class ApiClient {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
       signal: controller.signal,
+      credentials: "include",
     })
       .then(async (response) => {
         if (!response.ok) {

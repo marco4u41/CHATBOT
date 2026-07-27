@@ -78,7 +78,7 @@ class TestFetchRecommendationIntent:
 
         assert "VEHICLE_SEARCH" in result
         tool.search_vehicles.assert_awaited_once_with(
-            max_price=pytest.approx(57500.0), vehicle_type=None, fuel=None, limit=5,
+            manufacturer=None, max_price=pytest.approx(57500.0), vehicle_type=None, fuel=None, limit=5,
         )
 
     @pytest.mark.asyncio
@@ -91,7 +91,7 @@ class TestFetchRecommendationIntent:
         await orch._fetch_automotive_data(Intent.RECOMMENDATION, ctx)
 
         tool.search_vehicles.assert_awaited_once_with(
-            max_price=34500.0, vehicle_type="suv", fuel=None, limit=5,
+            manufacturer=None, max_price=34500.0, vehicle_type="suv", fuel=None, limit=5,
         )
 
     @pytest.mark.asyncio
@@ -104,7 +104,7 @@ class TestFetchRecommendationIntent:
         await orch._fetch_automotive_data(Intent.RECOMMENDATION, ctx)
 
         tool.search_vehicles.assert_awaited_once_with(
-            max_price=46000.0, vehicle_type=None, fuel="electrico", limit=5,
+            manufacturer=None, max_price=46000.0, vehicle_type=None, fuel="electrico", limit=5,
         )
 
     @pytest.mark.asyncio
@@ -175,7 +175,7 @@ class TestFetchRecommendationIntent:
         result = await orch._fetch_automotive_data(Intent.RECOMMENDATION, ctx)
 
         tool.search_vehicles.assert_awaited_once_with(
-            max_price=None, vehicle_type=None, fuel=None, limit=5,
+            manufacturer=None, max_price=None, vehicle_type=None, fuel=None, limit=5,
         )
         assert "VEHICLE_SEARCH" in result
 
@@ -189,7 +189,7 @@ class TestFetchRecommendationIntent:
         await orch._fetch_automotive_data(Intent.RECOMMENDATION, ctx)
 
         tool.search_vehicles.assert_awaited_once_with(
-            max_price=None, vehicle_type="truck", fuel=None, limit=5,
+            manufacturer=None, max_price=None, vehicle_type="truck", fuel=None, limit=5,
         )
 
 

@@ -40,14 +40,13 @@ export function MessageInput({
   }
 
   return (
-    <div className="flex-shrink-0 border-t border-gold-premium/[0.08] premium-liquid-glass p-4">
+    <div className="flex-shrink-0 border-t border-white/[0.06] ax-glass p-4">
       <div className="max-w-3xl mx-auto">
         <div className="relative">
-          {/* Gold beveled edge — top highlight */}
-          <div className="absolute -top-px left-4 right-4 h-px bg-gradient-to-r from-transparent via-gold-premium/20 to-transparent rounded-full" />
-
           <textarea
             ref={textareaRef}
+            id="chat-message"
+            name="message"
             value={value}
             onChange={(e) => setValue(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -56,10 +55,12 @@ export function MessageInput({
             rows={1}
             className={cn(
               "w-full resize-none rounded-xl px-4 py-3 pr-12 text-sm",
-              "glass-input text-white placeholder:text-platinum/50",
+              "bg-ax-bg-deep/90 text-ax-text-primary placeholder:text-ax-text-subtle",
+              "border border-white/[0.08] shadow-ax-inset",
               "disabled:opacity-40 disabled:cursor-not-allowed",
               "transition-all duration-200",
-              isOverLimit && "border-neon-red/50",
+              "focus:outline-none focus:border-ax-accent-primary/25 focus:shadow-[0_0_0_3px_rgba(111,38,64,0.06)]",
+              isOverLimit && "border-ax-accent-danger/50",
             )}
             aria-label="Mensaje del chat"
             aria-describedby="char-count"
@@ -70,8 +71,8 @@ export function MessageInput({
             className={cn(
               "absolute right-3 bottom-3 p-2 rounded-xl transition-all duration-200",
               value.trim() && !disabled && !isOverLimit
-                ? "skeuo-gold-button text-gold-premium"
-                : "bg-white/[0.03] text-white/15 cursor-not-allowed border border-white/[0.05]",
+                ? "bg-gradient-to-br from-ax-gold/15 to-ax-gold/5 text-ax-gold border border-ax-gold/20 shadow-ax-glow-gold hover:from-ax-gold/25 hover:to-ax-gold/10 active:scale-[0.95]"
+                : "bg-ax-surface text-ax-text-subtle cursor-not-allowed border border-white/[0.06]",
             )}
             aria-label="Enviar mensaje"
           >
@@ -93,12 +94,12 @@ export function MessageInput({
         <p
           id="char-count"
           className={cn(
-            "mt-1.5 text-[10px] text-right font-mono",
+            "mt-1.5 text-[10px] text-right font-ax-mono",
             isOverLimit
-              ? "text-neon-red"
+              ? "text-ax-accent-danger"
               : isNearLimit
-                ? "text-neon-orange"
-                : "text-platinum/40",
+                ? "text-ax-accent-warning"
+                : "text-ax-text-muted",
           )}
         >
           {charCount}/{maxLength}

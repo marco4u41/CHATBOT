@@ -7,7 +7,7 @@ export function Card({ className, ...props }: CardProps) {
   return (
     <div
       className={cn(
-        "liquid-glass-panel rounded-2xl",
+        "ax-glass rounded-2xl",
         className,
       )}
       {...props}
@@ -21,7 +21,7 @@ export function CardHeader({ className, ...props }: CardHeaderProps) {
   return (
     <div
       className={cn(
-        "px-6 py-4 border-b border-white/8",
+        "px-6 py-4 border-b border-white/[0.06]",
         className,
       )}
       {...props}
