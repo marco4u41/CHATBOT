@@ -357,12 +357,13 @@ npm run build
 
 ## 👨‍💻 Autores
 
-| Nombre | Rol | GitHub |
-|--------|-----|--------|
-| **Carlos Alejandro Coronel Quilachamin** | Backend / IA / DevOps | [@coronelcarlos](https://github.com/coronelcarlos) |
-| **David Alejandro Cruz Palacios** | Backend / Base de Datos / Testing | [@cruzdavid](https://github.com/cruzdavid) |
-| **Dilan Andres Delgado Salgado** | Frontend / UX / Estado | [@delgadodilan](https://github.com/delgadodilan) |
-| **Marco Antonio Espinoza Huanga** | Arquitectura / IA / Prompt Engineering | [@espinozamarco](https://github.com/espinozamarco) |
+**Carlos Alejandro Coronel Quilachamin** 
+
+**David Alejandro Cruz Palacios** 
+
+**Dilan Andres Delgado Salgado** 
+
+**Marco Antonio Espinoza Huanga** 
 
 > Proyecto desarrollado para **Inteligencia Artificial — Sexto Semestre**  
 > Universidad Politécnica Salesiana — Quito, Ecuador
@@ -376,9 +377,3 @@ El código y la documentación son propiedad de sus autores.
 Queda prohibido el uso comercial sin autorización expresa.
 
 ---
-
-## 🙏 Agradecimientos
-
-- **OpenRouter** por el acceso gratuito a Nemotron-3-Ultra
-- **Comunidad FastAPI / SQLAlchemy / React** por tooling de primer nivel
-- **Datos vehiculares** agregados de fuentes públicas anonimizadas
