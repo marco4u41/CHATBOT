@@ -8,6 +8,9 @@ build/
 .venv/
 venv/
 env/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
 
 # Environment
 .env
@@ -29,6 +32,9 @@ frontend/dist/
 # OS
 .DS_Store
 Thumbs.db
+
+# Logs
+*.log
 
 # Docker
 docker-compose.override.yml
