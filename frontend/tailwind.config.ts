@@ -94,6 +94,13 @@ export default {
         },
       },
 
+      /* ── Blur ── */
+      backdropBlur: {
+        xs: "2px",
+        glass: "18px",
+        "glass-heavy": "24px",
+      },
+
       /* ── Animations ── */
       animation: {
         "ax-fade-in": "axFadeIn 0.25s ease-out",
@@ -104,6 +111,8 @@ export default {
         "ax-pulse-wine": "axPulseWine 2s ease-in-out infinite",
         "fade-in": "fadeIn 0.3s ease-out",
         "slide-up": "slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
+        "slide-in-right": "slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+        "slide-in-left": "slideInLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
       },
       keyframes: {
         axFadeIn: {
@@ -138,23 +147,42 @@ export default {
           "0%": { opacity: "0", transform: "translateY(16px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
+        slideInRight: {
+          "0%": { transform: "translateX(100%)" },
+          "100%": { transform: "translateX(0)" },
+        },
+        slideInLeft: {
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(0)" },
+        },
       },
 
       /* ── Shadows ── */
       boxShadow: {
-        "ax-glass": "0 8px 32px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 -1px 0 rgba(0, 0, 0, 0.2)",
-        "ax-glass-inset": "inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 -1px 0 rgba(0, 0, 0, 0.3)",
-        "ax-card": "0 4px 20px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3)",
+        "ax-glass":
+          "0 8px 32px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 -1px 0 rgba(0, 0, 0, 0.2)",
+        "ax-glass-inset":
+          "inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 -1px 0 rgba(0, 0, 0, 0.3)",
+        "ax-card":
+          "0 4px 20px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3)",
         "ax-elevated": "0 8px 32px rgba(0, 0, 0, 0.5)",
         "ax-modal": "0 24px 80px rgba(0, 0, 0, 0.7)",
         "ax-inset": "inset 0 2px 6px rgba(0, 0, 0, 0.5)",
-        "ax-inset-deep": "inset 0 3px 8px rgba(0, 0, 0, 0.6), inset 0 1px 2px rgba(0, 0, 0, 0.4)",
+        "ax-inset-deep":
+          "inset 0 3px 8px rgba(0, 0, 0, 0.6), inset 0 1px 2px rgba(0, 0, 0, 0.4)",
         "ax-glow-wine": "0 0 20px rgba(139, 49, 82, 0.15)",
         "ax-glow-gold": "0 0 16px rgba(181, 154, 98, 0.10)",
-        "ax-sidebar": "4px 0 24px rgba(0, 0, 0, 0.4), inset -1px 0 0 rgba(255, 255, 255, 0.06)",
-        "ax-input-float": "0 -2px 24px rgba(0, 0, 0, 0.35), 0 4px 16px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.08)",
-        "neon-blue": "0 0 20px rgba(86, 127, 165, 0.2), 0 0 40px rgba(86, 127, 165, 0.08)",
-        "gold-glow": "0 0 20px rgba(181, 154, 98, 0.15), 0 0 40px rgba(181, 154, 98, 0.06)",
+        "ax-sidebar":
+          "4px 0 24px rgba(0, 0, 0, 0.4), inset -1px 0 0 rgba(255, 255, 255, 0.06)",
+        "ax-input-float":
+          "0 -2px 24px rgba(0, 0, 0, 0.35), 0 4px 16px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.08)",
+        "neon-blue":
+          "0 0 20px rgba(86, 127, 165, 0.2), 0 0 40px rgba(86, 127, 165, 0.08)",
+        "gold-glow":
+          "0 0 20px rgba(181, 154, 98, 0.15), 0 0 40px rgba(181, 154, 98, 0.06)",
+        "ax-ring-wine": "0 0 0 3px rgba(139, 49, 82, 0.25)",
+        "ax-ring-steel": "0 0 0 3px rgba(86, 127, 165, 0.25)",
+        "ax-ring-gold": "0 0 0 3px rgba(181, 154, 98, 0.20)",
       },
 
       /* ── Border radius ── */

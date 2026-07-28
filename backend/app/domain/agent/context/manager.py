@@ -20,10 +20,9 @@ class ContextManager:
     Flow:
     1. Load user profile from DB (persistent memory)
     2. Extract new data from recent messages (gap filling)
-    3. Merge: profile data wins, extractor fills missing fields
-    4. Load recent conversation summaries (cross-conversation memory)
-    5. Save updated profile back to DB
-    6. Render compact prompt block from merged context + summaries
+    3. Merge active-conversation data with non-conflicting global preferences
+    4. Save durable preferences back to DB
+    5. Render the active-conversation context block
     """
 
     def __init__(
@@ -49,6 +48,8 @@ class ContextManager:
         engine_type: str | None = None,
         profile_id: str | None = None,
         exclude_conversation_id: str | None = None,
+        conversation_id: str | None = None,
+        user_id: str | None = None,
     ) -> tuple[UserContext, str]:
         """Extract context from profile + history and render a compact
         prompt block. Returns (user_context, context_block_text).
@@ -69,6 +70,18 @@ class ContextManager:
             terrain=terrain,
             engine_type=engine_type,
         )
+        inherited = self._extractor.extract(
+            messages[:-1],
+            budget=None,
+            terrain=None,
+            engine_type=None,
+        ) if messages else UserContext()
+        current = self._extractor.extract(
+            messages[-1:],
+            budget=budget,
+            terrain=terrain,
+            engine_type=engine_type,
+        ) if messages else UserContext()
 
         extracted_profile = self._context_to_profile(extracted, profile.id)
 
@@ -82,8 +95,19 @@ class ContextManager:
 
         user_context = self._profile_to_context(merged_profile, extracted)
 
-        recent_summaries = await self._load_recent_summaries(
-            exclude_conversation_id,
+        # Conversation summaries are intentionally not injected here. They
+        # contain query-specific constraints (brand, budget, symptoms, etc.)
+        # and are not global user preferences.
+        recent_summaries: list[str] = []
+
+        logger.info(
+            "Recommendation context conversation_id=%s user_id=%s "
+            "extracted=%s inherited=%s final=%s",
+            conversation_id or exclude_conversation_id or "-",
+            user_id or profile_id or "-",
+            current.to_compact_dict(),
+            inherited.to_compact_dict(),
+            user_context.to_compact_dict(),
         )
 
         if user_context.is_empty() and not recent_summaries:
@@ -170,29 +194,11 @@ class ContextManager:
         ctx: UserContext,
         profile_id: str,
     ) -> UserProfile:
-        brand = None
-        model = None
-        year = None
-        engine = None
-        if ctx.vehicles:
-            v = ctx.vehicles[0]
-            brand = v.brand
-            model = v.model or None
-            year = v.year
-            engine = v.engine or None
-
+        # Only durable, explicitly expressed preferences belong in the global
+        # profile. Query filters and mentioned vehicles stay conversation-local.
         return UserProfile(
             id=profile_id,
-            primary_vehicle_brand=brand,
-            primary_vehicle_model=model,
-            primary_vehicle_year=year,
-            primary_vehicle_engine=engine,
-            budget_usd=ctx.budget,
-            terrain=ctx.terrain,
-            engine_type=ctx.engine_type,
-            usage=ctx.usage or None,
             preferences=ctx.preferences,
-            mentioned_brands=ctx.mentioned_brands,
             preferred_brands=ctx.preferred_brands,
         )
 
@@ -201,38 +207,28 @@ class ContextManager:
         profile: UserProfile,
         extracted: UserContext,
     ) -> UserContext:
-        vehicles = list(extracted.vehicles)
-        if not vehicles and profile.has_vehicle():
-            from app.domain.agent.context.user_context import VehicleInfo
-
-            vehicles = [
-                VehicleInfo(
-                    brand=profile.primary_vehicle_brand or "",
-                    model=profile.primary_vehicle_model or "",
-                    year=profile.primary_vehicle_year,
-                    engine=profile.primary_vehicle_engine or "",
-                ),
-            ]
-
-        brands = list(set(profile.mentioned_brands + extracted.mentioned_brands))
-
-        prefs = list(set(profile.preferences + extracted.preferences))
-
-        preferred = list(
-            set(profile.preferred_brands + extracted.preferred_brands),
+        prefs = list(dict.fromkeys(profile.preferences + extracted.preferences))
+        preferred = (
+            []
+            if extracted.manufacturer_cleared
+            else list(dict.fromkeys(
+                extracted.preferred_brands + profile.preferred_brands,
+            ))
         )
 
         return UserContext(
-            vehicles=vehicles,
-            mentioned_brands=brands,
-            budget=extracted.budget if extracted.budget is not None else profile.budget_usd,
-            terrain=extracted.terrain or profile.terrain,
-            engine_type=extracted.engine_type or profile.engine_type,
-            usage=extracted.usage or profile.usage,
+            vehicles=list(extracted.vehicles),
+            mentioned_brands=list(extracted.mentioned_brands),
+            budget=extracted.budget,
+            terrain=extracted.terrain,
+            engine_type=extracted.engine_type,
+            usage=extracted.usage,
             preferences=prefs,
             has_diagnosed_issue=extracted.has_diagnosed_issue,
             diagnosis_symptoms=extracted.diagnosis_symptoms,
-            fuel_preference=profile.fuel_preference,
+            fuel_preference=extracted.fuel_preference,
+            body_type=extracted.body_type,
+            manufacturer_cleared=extracted.manufacturer_cleared,
             family_size=profile.family_size,
             preferred_brands=preferred,
         )

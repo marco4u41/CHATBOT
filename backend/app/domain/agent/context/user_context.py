@@ -25,6 +25,8 @@ class UserContext:
     has_diagnosed_issue: bool = False
     diagnosis_symptoms: list[str] = field(default_factory=list)
     fuel_preference: str | None = None
+    body_type: str | None = None
+    manufacturer_cleared: bool = False
     family_size: int | None = None
 
     def is_empty(self) -> bool:
@@ -39,6 +41,8 @@ class UserContext:
             and not self.preferences
             and not self.has_diagnosed_issue
             and self.fuel_preference is None
+            and self.body_type is None
+            and not self.manufacturer_cleared
             and self.family_size is None
         )
 
@@ -61,10 +65,14 @@ class UserContext:
             result["engine_type"] = self.engine_type
         if self.usage:
             result["usage"] = self.usage
-        if self.preferences:
-            result["preferences"] = list(set(self.preferences))
         if self.fuel_preference:
             result["fuel_preference"] = self.fuel_preference
+        if self.body_type:
+            result["body_type"] = self.body_type
+        if self.manufacturer_cleared:
+            result["manufacturer"] = None
+        if self.preferences:
+            result["preferences"] = list(set(self.preferences))
         if self.family_size is not None:
             result["family_size"] = self.family_size
         if self.has_diagnosed_issue:

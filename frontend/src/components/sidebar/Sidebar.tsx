@@ -1,299 +1,321 @@
-import { useEffect, useState } from "react";
-import { useChatStore } from "@/stores/chatStore";
+import { useState } from "react";
+import { motion } from "motion/react";
+import {
+  Check,
+  LoaderCircle,
+  LogOut,
+  MessageSquare,
+  MessageSquarePlus,
+  PanelLeftClose,
+  Trash2,
+  Wrench,
+  X,
+} from "lucide-react";
 import { useConversationStore } from "@/stores/conversationStore";
 import { useAuthStore } from "@/stores/authStore";
-import { apiClient } from "@/api/client";
+import { useChatStore } from "@/stores/chatStore";
+import { useNotificationStore } from "@/stores/notificationStore";
 import { cn } from "@/utils/cn";
+import { formatRelativeTime } from "@/utils/format";
 
 interface SidebarProps {
-  view: "chat" | "dashboard";
-  onNavigate: (view: "chat" | "dashboard") => void;
-  isMobileOpen?: boolean;
-  onMobileClose?: () => void;
+  onClose?: () => void;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
-export function Sidebar({
-  view,
-  onNavigate,
-  isMobileOpen = false,
-  onMobileClose,
-}: SidebarProps) {
-  const { conversations, activeId, isLoading, loadConversations, setActive } =
+export default function Sidebar({ onClose, isCollapsed = false, onToggleCollapse }: SidebarProps) {
+  const { conversations, activeId, setActive, deleteConversation, isLoading } =
     useConversationStore();
-  const { clearMessages, loadMessages } = useChatStore();
   const { user, logout } = useAuthStore();
-  const [collapsed, setCollapsed] = useState(false);
-  const isAdmin = user?.is_admin ?? false;
+  const clearMessages = useChatStore((s) => s.clearMessages);
+  const addNotification = useNotificationStore((s) => s.addNotification);
+  const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadConversations();
-  }, [loadConversations]);
-
-  function handleNewChat() {
+  const handleNew = () => {
     clearMessages();
     setActive(null);
-    onNavigate("chat");
-    onMobileClose?.();
-  }
+    onClose?.();
+  };
 
-  function handleNavigate(target: "chat" | "dashboard") {
-    onNavigate(target);
-    onMobileClose?.();
-  }
+  const handleSelect = (id: string) => {
+    if (deletingId) return;
+    setActive(id);
+    onClose?.();
+  };
 
-  async function handleLogout() {
-    try {
-      await apiClient.post("/auth/logout", {});
-    } catch {
-      // ignore
+  const handleDelete = async (id: string, title: string) => {
+    setDeletingId(id);
+    const wasActive = activeId === id;
+    const deleted = await deleteConversation(id);
+    setDeletingId(null);
+    setConfirmingDeleteId(null);
+
+    if (deleted) {
+      if (wasActive) clearMessages();
+      addNotification(
+        "success",
+        "Conversación eliminada",
+        `“${title}” se eliminó de tu historial`,
+      );
+    } else {
+      addNotification(
+        "warning",
+        "No se pudo eliminar",
+        "Inténtalo nuevamente en unos segundos",
+      );
     }
+  };
+
+  const handleLogout = async () => {
     clearMessages();
-    logout();
-  }
+    useConversationStore.setState({ conversations: [], activeId: null });
+    await logout();
+  };
+
+  const initials = user?.display_name
+    ? user.display_name
+        .split(" ")
+        .map((n) => n[0])
+        .slice(0, 2)
+        .join("")
+        .toUpperCase()
+    : user?.email?.charAt(0).toUpperCase() ?? "U";
 
   return (
-    <>
-      {/* Mobile backdrop */}
-      {isMobileOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden animate-ax-fade-in"
-          onClick={onMobileClose}
-          aria-hidden="true"
-        />
+    <motion.aside
+      initial={false}
+      animate={{
+        width: isCollapsed ? 64 : 280,
+        opacity: 1,
+      }}
+      transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+      className={cn(
+        "relative flex flex-col h-full ax-sidebar-glass z-30 shrink-0"
       )}
-
-      <aside
-        className={cn(
-          "flex-shrink-0 flex flex-col relative",
-          "ax-sidebar-glass",
-          "transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]",
-          collapsed ? "w-[4.5rem]" : "w-[280px]",
-          "fixed inset-y-0 left-0 z-50 lg:relative",
-          isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+    >
+      {/* Top Section */}
+      <div className="flex items-center justify-between px-4 pt-5 pb-4">
+        {!isCollapsed && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex items-center gap-3 min-w-0"
+          >
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-ax-wine/50 to-ax-wine/30 flex items-center justify-center border border-[var(--ax-glass-border)] shrink-0 shadow-lg">
+              <Wrench className="w-4.5 h-4.5 text-[var(--ax-text)]" />
+            </div>
+            <div className="min-w-0">
+              <h2 className="text-sm font-semibold text-[var(--ax-text)] truncate leading-tight">
+                AutoExpert
+              </h2>
+              <span className="text-[10px] text-[var(--ax-text-muted)] tracking-wider uppercase font-medium">
+                AI Assistant
+              </span>
+            </div>
+          </motion.div>
         )}
-        aria-label="Navegacion principal"
-      >
-        {/* ── Brand Header ── */}
-        <div className={cn("flex-shrink-0 border-b border-white/[0.06]", collapsed ? "p-3" : "px-5 pt-5 pb-4")}>
-          <div className={cn("flex items-center", collapsed ? "justify-center" : "gap-3 mb-5")}>
-            <div className="flex-shrink-0 w-9 h-9 rounded-xl bg-gradient-to-br from-ax-wine/20 to-ax-wine/5 flex items-center justify-center border border-ax-wine/15">
-              <svg className="h-5 w-5 text-ax-wine-light/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 20.105V4.875A1.875 1.875 0 0 1 5.625 3h12.75A1.875 1.875 0 0 1 20.25 4.875v10.5A1.875 1.875 0 0 1 18.375 17.25H8.655l-3.46 2.595A.75.75 0 0 1 4 19.256Z" />
-              </svg>
-            </div>
-            {!collapsed && (
-              <div className="min-w-0 animate-ax-fade-in">
-                <h1 className="ax-text-heading text-sm text-platinum truncate">AutoBot</h1>
-                <p className="ax-text-label text-ax-text-muted text-[10px]">
-                  Asistente Automotriz
-                </p>
-              </div>
-            )}
+        {isCollapsed && (
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-ax-wine/50 to-ax-wine/30 flex items-center justify-center border border-[var(--ax-glass-border)] mx-auto shadow-lg">
+            <Wrench className="w-4.5 h-4.5 text-[var(--ax-text)]" />
           </div>
+        )}
+        {!isCollapsed && onToggleCollapse && (
+          <button
+            onClick={onToggleCollapse}
+            className="p-2 rounded-xl hover:bg-[var(--ax-glass-highlight)] text-[var(--ax-text-muted)] hover:text-[var(--ax-text-secondary)] transition-colors"
+            title="Colapsar panel"
+            aria-label="Colapsar panel"
+          >
+            <PanelLeftClose className="w-4 h-4" />
+          </button>
+        )}
+        {isCollapsed && onToggleCollapse && (
+          <button
+            onClick={onToggleCollapse}
+            className="absolute top-5 right-2 p-2 rounded-xl hover:bg-white/5 text-white/50 hover:text-white/70 transition-colors"
+            title="Expandir panel"
+            aria-label="Expandir panel"
+          >
+            <PanelLeftClose className="w-4 h-4 rotate-180" />
+          </button>
+        )}
+      </div>
 
-          {!collapsed && (
-            <div className="space-y-2 animate-ax-fade-in">
-              {/* New Chat Button */}
-              <button
-                onClick={handleNewChat}
-                className={cn(
-                  "w-full flex items-center justify-center gap-2 rounded-xl px-4 py-2.5",
-                  "text-xs font-semibold font-ax-sans",
-                  "bg-ax-wine/15 text-ax-wine-light border border-ax-wine/20",
-                  "hover:bg-ax-wine/25 hover:border-ax-wine/30 hover:shadow-ax-glow-wine",
-                  "active:scale-[0.97] transition-all duration-200",
-                )}
-              >
-                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                </svg>
-                Nueva conversacion
-              </button>
-
-              {isAdmin && (
-                <button
-                  onClick={() => handleNavigate(view === "chat" ? "dashboard" : "chat")}
-                  className={cn(
-                    "w-full flex items-center justify-center gap-2 rounded-xl px-4 py-2.5",
-                    "text-xs font-medium font-ax-sans transition-all duration-200",
-                    view === "dashboard"
-                      ? "bg-ax-gold/10 text-ax-gold border border-ax-gold/20"
-                      : "text-ax-text-muted border border-white/[0.06] hover:text-ax-text-secondary hover:bg-white/[0.04]",
-                  )}
-                  aria-pressed={view === "dashboard"}
-                >
-                  {view === "chat" ? (
-                    <>
-                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5" />
-                      </svg>
-                      Dashboard
-                    </>
-                  ) : (
-                    <>
-                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 20.105V4.875A1.875 1.875 0 0 1 5.625 3h12.75A1.875 1.875 0 0 1 20.25 4.875v10.5A1.875 1.875 0 0 1 18.375 17.25H8.655l-3.46 2.595A.75.75 0 0 1 4 19.256Z" />
-                      </svg>
-                      Chat
-                    </>
-                  )}
-                </button>
-              )}
-            </div>
+      {/* New Conversation Button */}
+      <div className={cn("px-3 mb-2", isCollapsed && "px-2")}>
+        <button
+          onClick={handleNew}
+          className={cn(
+            "ax-interactive flex items-center gap-2.5 rounded-xl font-medium text-sm transition-all w-full",
+            "bg-gradient-to-r from-ax-wine/25 to-ax-wine/15 border border-ax-wine/20 text-[var(--ax-text)] hover:border-ax-wine/35 hover:from-ax-wine/35 hover:to-ax-wine/25",
+            isCollapsed ? "justify-center px-2 py-2.5" : "px-4 py-3"
           )}
-        </div>
-
-        {/* ── Section Label ── */}
-        {!collapsed && (
-          <div className="px-5 pt-4 pb-2">
-            <span className="ax-text-label text-[10px] text-ax-text-subtle">Conversaciones</span>
-          </div>
-        )}
-
-        {/* ── Conversations ── */}
-        <nav
-          className="flex-1 overflow-y-auto px-2.5 pb-2 ax-scrollbar"
-          aria-label="Conversaciones"
         >
-          {isLoading ? (
-            <div className="space-y-1.5 px-1">
-              {[1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="h-12 rounded-xl bg-white/[0.03] animate-ax-shimmer"
-                />
-              ))}
-            </div>
-          ) : conversations.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 px-4">
-              {!collapsed && (
-                <>
-                  <div className="w-10 h-10 rounded-xl bg-white/[0.03] flex items-center justify-center mb-3 border border-white/[0.04]">
-                    <svg className="h-5 w-5 text-ax-text-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 0 1-.825-.242m9.345-8.334a2.126 2.126 0 0 0-.476-.095 48.64 48.64 0 0 0-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0 0 11.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155" />
-                    </svg>
-                  </div>
-                  <p className="ax-text-label text-ax-text-subtle text-[10px] text-center leading-relaxed">
-                    Inicia una conversacion para comenzar
-                  </p>
-                </>
-              )}
-            </div>
-          ) : (
-            <ul className="space-y-0.5" role="list">
-              {conversations.map((conversation) => (
-                <li key={conversation.id}>
-                  <button
-                    onClick={() => {
-                      setActive(conversation.id);
-                      loadMessages(conversation.id);
-                      onNavigate("chat");
-                      onMobileClose?.();
-                    }}
-                    className={cn(
-                      "w-full text-left rounded-xl px-3 py-2.5 relative",
-                      "transition-all duration-200 ease-out",
-                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ax-wine/30 focus-visible:ring-offset-1 focus-visible:ring-offset-ax-bg-deep",
-                      activeId === conversation.id
-                        ? "ax-sidebar-active text-platinum"
-                        : "border border-transparent text-ax-text-secondary hover:text-ax-text-primary hover:bg-white/[0.03]",
-                    )}
-                  >
-                    {collapsed ? (
-                      <span className="flex items-center justify-center">
-                        <span className={cn(
-                          "w-2 h-2 rounded-full shrink-0",
-                          activeId === conversation.id ? "bg-ax-wine-light" : "bg-ax-text-subtle",
-                        )} />
-                      </span>
-                    ) : (
-                      <>
-                        <span className="block truncate text-sm font-medium font-ax-sans">
-                          {conversation.title}
-                        </span>
-                        <span className="block truncate text-[10px] text-ax-text-subtle font-ax-mono mt-0.5">
-                          {conversation.message_count} mensajes
-                        </span>
-                      </>
-                    )}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </nav>
+          <MessageSquarePlus className="w-4.5 h-4.5 shrink-0" />
+          {!isCollapsed && <span>Nueva Consulta</span>}
+        </button>
+      </div>
 
-        {/* ── Bottom Section: User + Controls ── */}
-        <div className="flex-shrink-0 border-t border-white/[0.06]">
-          {/* Collapse Toggle (desktop) */}
-          <div className="hidden lg:flex border-b border-white/[0.04]">
-            <button
-              onClick={() => setCollapsed((c) => !c)}
-              className={cn(
-                "flex items-center gap-2 w-full px-4 py-2.5",
-                "text-ax-text-subtle hover:text-ax-text-secondary",
-                "transition-all duration-200",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ax-wine/30",
-                collapsed && "justify-center",
-              )}
-              aria-label={collapsed ? "Expandir barra lateral" : "Colapsar barra lateral"}
-            >
-              <svg
-                className={cn("h-4 w-4 transition-transform duration-300", collapsed && "rotate-180")}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={1.5}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 6l-6 6 6 6" />
-              </svg>
-              {!collapsed && (
-                <span className="ax-text-label text-[10px] animate-ax-fade-in">Colapsar</span>
-              )}
-            </button>
+      {/* Conversations List */}
+      <div className="flex-1 overflow-y-auto ax-scrollbar px-3 py-2">
+        {!isCollapsed && (
+          <p className="ax-text-label text-[var(--ax-text-muted)] px-1 mb-2">Historial</p>
+        )}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="w-5 h-5 border-2 border-[var(--ax-glass-border)] border-t-ax-gold/60 rounded-full animate-spin" />
           </div>
-
-          {/* User Info */}
-          {user && (
-            <div className={cn("p-3", collapsed ? "flex justify-center" : "px-4 py-3")}>
-              {collapsed ? (
-                <button
-                  onClick={handleLogout}
-                  className="w-8 h-8 rounded-lg bg-white/[0.04] flex items-center justify-center text-ax-text-subtle hover:text-ax-wine-light transition-colors"
-                  aria-label="Cerrar sesion"
+        ) : conversations.length === 0 ? (
+          !isCollapsed && (
+            <div className="text-center py-10 px-4">
+              <MessageSquare className="w-8 h-8 text-[var(--ax-text-muted)] mx-auto mb-3 opacity-30" />
+              <p className="text-[var(--ax-text-muted)] text-xs leading-relaxed">
+                Sin conversaciones
+                <br />
+                <span className="opacity-60">Inicia una consulta técnica</span>
+              </p>
+            </div>
+          )
+        ) : (
+          <ul className="space-y-0.5">
+            {conversations.map((c, i) => (
+              <motion.li
+                key={c.id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: Math.min(i * 0.02, 0.15) }}
+              >
+                <div
+                  className={cn(
+                    "ax-interactive relative flex w-full items-center rounded-xl transition-all group",
+                    activeId === c.id
+                      ? "ax-sidebar-active"
+                      : "hover:bg-[var(--ax-glass-highlight)] border border-transparent hover:border-[var(--ax-glass-border)]"
+                  )}
                 >
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
-                  </svg>
-                </button>
-              ) : (
-                <div className="flex items-center justify-between gap-2">
-                  <div className="min-w-0 flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-ax-wine/25 to-ax-wine/10 flex items-center justify-center border border-ax-wine/15 shrink-0">
-                      <span className="text-[11px] font-bold text-ax-wine-light uppercase">
-                        {user.display_name?.[0] || user.email[0]}
-                      </span>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs font-medium text-ax-text-primary truncate">{user.display_name || user.email.split("@")[0]}</p>
-                      <p className="text-[10px] text-ax-text-subtle truncate font-ax-mono">{user.email}</p>
-                    </div>
-                  </div>
                   <button
-                    onClick={handleLogout}
-                    className="flex-shrink-0 p-1.5 rounded-lg text-ax-text-subtle hover:text-ax-wine-light hover:bg-white/[0.04] transition-colors"
-                    aria-label="Cerrar sesion"
+                    type="button"
+                    onClick={() => handleSelect(c.id)}
+                    disabled={deletingId === c.id}
+                    className={cn(
+                      "flex min-w-0 flex-1 items-center gap-3 text-left",
+                      isCollapsed ? "justify-center p-2.5" : "px-3.5 py-2.5 pr-10",
+                    )}
+                    title={isCollapsed ? c.title : undefined}
                   >
-                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
-                    </svg>
+                    <MessageSquare
+                      className={cn(
+                        "w-4 h-4 shrink-0",
+                        activeId === c.id ? "text-ax-wine/70" : "text-[var(--ax-text-muted)]"
+                      )}
+                    />
+                    {!isCollapsed && (
+                      <div className="min-w-0">
+                        <p
+                          className={cn(
+                            "text-sm truncate leading-snug",
+                            activeId === c.id ? "text-[var(--ax-text)] font-medium" : "text-[var(--ax-text-secondary)]"
+                          )}
+                        >
+                          {c.title}
+                        </p>
+                        <span className="text-[11px] text-[var(--ax-text-muted)] mt-0.5 block">
+                          {formatRelativeTime(c.updated_at)}
+                        </span>
+                      </div>
+                    )}
                   </button>
+
+                  {!isCollapsed && (
+                    <div className="absolute right-1.5 flex items-center gap-0.5">
+                      {confirmingDeleteId === c.id ? (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => void handleDelete(c.id, c.title)}
+                            disabled={deletingId === c.id}
+                            className="ax-focus-ring rounded-lg p-1.5 text-red-400 transition-colors hover:bg-red-500/10 disabled:opacity-50"
+                            aria-label={`Confirmar eliminación de ${c.title}`}
+                            title="Confirmar eliminación"
+                          >
+                            {deletingId === c.id ? (
+                              <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Check className="h-3.5 w-3.5" />
+                            )}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setConfirmingDeleteId(null)}
+                            disabled={deletingId === c.id}
+                            className="ax-focus-ring rounded-lg p-1.5 text-[var(--ax-text-muted)] transition-colors hover:bg-[var(--ax-glass-highlight)] hover:text-[var(--ax-text)]"
+                            aria-label="Cancelar eliminación"
+                            title="Cancelar"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setConfirmingDeleteId(c.id)}
+                          className="ax-focus-ring rounded-lg p-1.5 text-[var(--ax-text-muted)] opacity-0 transition-all hover:bg-red-500/10 hover:text-red-400 group-hover:opacity-100 focus:opacity-100"
+                          aria-label={`Eliminar conversación ${c.title}`}
+                          title="Eliminar conversación"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
-              )}
+              </motion.li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {/* User / Logout */}
+      <div
+        className={cn(
+          "border-t border-[var(--ax-glass-border)] p-3",
+          isCollapsed && "px-2"
+        )}
+      >
+        <div
+          className={cn(
+            "flex items-center gap-3",
+            isCollapsed && "justify-center"
+          )}
+        >
+          <div className="w-8 h-8 rounded-lg bg-ax-steel/15 border border-[var(--ax-glass-border)] flex items-center justify-center text-[var(--ax-text-secondary)] text-xs font-semibold shrink-0">
+            {initials}
+          </div>
+          {!isCollapsed && (
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-[var(--ax-text-secondary)] font-medium truncate">
+                {user?.display_name || user?.email}
+              </p>
+              <span className="text-[10px] text-[var(--ax-text-muted)] block truncate">
+                {user?.is_admin ? "Admin" : "Usuario"}
+              </span>
             </div>
           )}
+          <button
+            onClick={handleLogout}
+            className={cn(
+              "p-2 rounded-xl text-[var(--ax-text-muted)] hover:text-[var(--ax-text-secondary)] hover:bg-[var(--ax-glass-highlight)] transition-colors",
+              isCollapsed && "mx-auto"
+            )}
+            title="Cerrar sesión"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
         </div>
-      </aside>
-    </>
+      </div>
+    </motion.aside>
   );
 }

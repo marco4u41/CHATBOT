@@ -24,7 +24,7 @@ export interface CarSegment {
 
 export type MessageSegment = ContentSegment | CarSegment;
 
-const CAR_BLOCK_REGEX = /\[CAR\]\s*(\{[\s\S]*?\})\s*\[\/CAR\]/g;
+const CAR_BLOCK_REGEX = /\[CAR\]\s*([\s\S]*?)\s*\[\/CAR\]/g;
 
 export function parseMessageSegments(content: string): MessageSegment[] {
   const segments: MessageSegment[] = [];
@@ -70,5 +70,17 @@ export function parseMessageSegments(content: string): MessageSegment[] {
 }
 
 export function hasCarBlocks(content: string): boolean {
-  return CAR_BLOCK_REGEX.test(content);
+  return /\[CAR\][\s\S]*?\[\/CAR\]/.test(content);
+}
+
+export function getStreamingDisplayContent(content: string): string {
+  const withoutCompleteBlocks = content.replace(CAR_BLOCK_REGEX, "");
+  const incompleteBlockStart = withoutCompleteBlocks.lastIndexOf("[CAR]");
+  const visibleContent = (
+    incompleteBlockStart >= 0
+      ? withoutCompleteBlocks.slice(0, incompleteBlockStart)
+      : withoutCompleteBlocks
+  ).trim();
+
+  return visibleContent || "Preparando las recomendaciones…";
 }

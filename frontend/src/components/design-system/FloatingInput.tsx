@@ -1,4 +1,5 @@
 import { forwardRef, useState, type InputHTMLAttributes } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@/utils/cn";
 
 interface FloatingInputProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -48,26 +49,52 @@ export const FloatingInput = forwardRef<HTMLInputElement, FloatingInputProps>(
         <label
           htmlFor={inputId}
           className={cn(
-            "absolute left-4 transition-all duration-200 pointer-events-none",
-            "font-ax-sans",
-            isFloating
-              ? "top-2 text-[10px] ax-text-label tracking-wider"
-              : "top-1/2 -translate-y-1/2 text-sm text-ax-text-subtle",
+            "absolute left-4 pointer-events-none font-ax-sans transition-colors duration-200",
             focused && "text-ax-wine-light",
             error && "text-ax-accent-danger",
           )}
         >
-          {label}
+          <AnimatePresence mode="wait">
+            {isFloating ? (
+              <motion.span
+                key="floating"
+                initial={{ y: 8, opacity: 0, scale: 0.95 }}
+                animate={{ y: 0, opacity: 1, scale: 1 }}
+                exit={{ y: 8, opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                className="block top-2 text-[10px] ax-text-label tracking-wider"
+              >
+                {label}
+              </motion.span>
+            ) : (
+              <motion.span
+                key="default"
+                initial={{ y: -8, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -8, opacity: 0 }}
+                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                className="block top-1/2 -translate-y-1/2 text-sm text-ax-text-subtle"
+              >
+                {label}
+              </motion.span>
+            )}
+          </AnimatePresence>
         </label>
-        {error && (
-          <p
-            id={`${inputId}-error`}
-            className="mt-1.5 text-xs text-ax-accent-danger"
-            role="alert"
-          >
-            {error}
-          </p>
-        )}
+        <AnimatePresence>
+          {error && (
+            <motion.p
+              id={`${inputId}-error`}
+              initial={{ opacity: 0, y: -4, height: 0 }}
+              animate={{ opacity: 1, y: 0, height: "auto" }}
+              exit={{ opacity: 0, y: -4, height: 0 }}
+              transition={{ duration: 0.2 }}
+              className="mt-1.5 text-xs text-ax-accent-danger"
+              role="alert"
+            >
+              {error}
+            </motion.p>
+          )}
+        </AnimatePresence>
         {!error && hint && (
           <p
             id={`${inputId}-hint`}

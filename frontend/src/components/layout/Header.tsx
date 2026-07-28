@@ -1,50 +1,98 @@
-import { useAuthStore } from "@/stores/authStore";
+import { motion } from "motion/react";
+import {
+  Menu,
+  Sparkles,
+  Settings,
+  Bell,
+} from "lucide-react";
+import { useConversationStore } from "@/stores/conversationStore";
+import { useNotificationStore } from "@/stores/notificationStore";
+import NotificationPanel from "@/components/notifications/NotificationPanel";
 
 interface HeaderProps {
-  view: "chat" | "dashboard";
-  onToggleSidebar?: () => void;
+  onOpenSettings: () => void;
+  onToggleMobileSidebar: () => void;
 }
 
-export function Header({ view, onToggleSidebar }: HeaderProps) {
-  const { user } = useAuthStore();
+export default function Header({ onOpenSettings, onToggleMobileSidebar }: HeaderProps) {
+  const { conversations, activeId } = useConversationStore();
+  const { togglePanel, unreadCount } = useNotificationStore();
+
+  const activeConversation = conversations.find((c) => c.id === activeId);
 
   return (
-    <header className="flex-shrink-0 flex items-center justify-between px-6 py-3.5 border-b border-white/[0.06] bg-ax-bg-base/40 backdrop-blur-sm">
+    <motion.header
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+      className="h-17 shrink-0 ax-glass--light border-b border-[var(--ax-glass-border)] flex items-center justify-between px-4 lg:px-6 z-20"
+    >
+      {/* Left: mobile menu + title */}
       <div className="flex items-center gap-3 min-w-0">
-        {onToggleSidebar && (
-          <button
-            onClick={onToggleSidebar}
-            className="lg:hidden flex items-center justify-center w-8 h-8 rounded-lg text-ax-text-muted hover:text-ax-text-primary hover:bg-white/[0.04] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ax-wine/30"
-            aria-label="Abrir menu de navegacion"
-          >
-            <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-            </svg>
-          </button>
-        )}
+        <button
+          onClick={onToggleMobileSidebar}
+          className="p-2 rounded-xl hover:bg-[var(--ax-glass-highlight)] text-[var(--ax-text-muted)] hover:text-[var(--ax-text-secondary)] transition-colors lg:hidden"
+          title="Menú"
+          aria-label="Abrir menú de navegación"
+        >
+          <Menu className="w-4.5 h-4.5" />
+        </button>
 
-        <div className="min-w-0">
-          <div className="flex items-center gap-2.5">
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400/70 shadow-[0_0_6px_rgba(52,211,153,0.3)]" aria-hidden="true" />
-            <h1 className="ax-text-heading text-[15px] text-platinum truncate">
-              {view === "chat" ? "AutoBot" : "Dashboard"}
+        {activeConversation ? (
+          <div className="min-w-0">
+            <h1 className="text-sm font-semibold text-[var(--ax-text)] truncate">
+              {activeConversation.title}
             </h1>
+            <p className="text-[11px] text-[var(--ax-text-muted)] mt-0.5">
+              {activeConversation.message_count} mensajes
+            </p>
           </div>
-          <p className="text-[11px] text-ax-text-muted mt-0.5 hidden sm:block font-ax-sans tracking-wide">
-            {view === "chat"
-              ? "Comparacion - Diagnostico - Recomendacion"
-              : "Panel de control y metricas"}
-          </p>
-        </div>
+        ) : (
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-ax-wine/30 to-ax-wine/15 flex items-center justify-center border border-[var(--ax-glass-border)] shadow-md">
+              <Sparkles className="w-4 h-4 text-[var(--ax-text)]" />
+            </div>
+            <div>
+              <h1 className="ax-text-display text-lg leading-tight">
+                <span className="text-ax-gold/85">Auto</span>
+                <span className="text-[var(--ax-text)]">Expert</span>
+                <span className="text-ax-steel/70 text-sm ml-1 font-normal not-italic ax-text-heading">AI</span>
+              </h1>
+            </div>
+          </div>
+        )}
       </div>
 
-      {user && (
-        <div className="flex items-center gap-3">
-          <span className="ax-text-label text-ax-text-subtle text-[10px] hidden sm:block truncate max-w-[160px]">
-            {user.email}
-          </span>
+      {/* Right: controls */}
+      <div className="flex items-center gap-1.5">
+        {/* Notifications */}
+        <div className="relative">
+          <button
+            onClick={togglePanel}
+            className="p-2.5 rounded-xl text-[var(--ax-text-muted)] hover:text-[var(--ax-text-secondary)] hover:bg-[var(--ax-glass-highlight)] transition-colors relative"
+            title="Notificaciones"
+            aria-label="Notificaciones"
+          >
+            <Bell className="w-4.5 h-4.5" />
+            {unreadCount > 0 && (
+              <span className="absolute top-1.5 right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-ax-gold/80 text-[10px] font-bold text-[#06080D] flex items-center justify-center">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            )}
+          </button>
+          <NotificationPanel />
         </div>
-      )}
-    </header>
+
+        {/* Settings */}
+        <button
+          onClick={onOpenSettings}
+            className="p-2.5 rounded-xl text-[var(--ax-text-muted)] hover:text-[var(--ax-text-secondary)] hover:bg-[var(--ax-glass-highlight)] transition-colors"
+          title="Configuración"
+          aria-label="Configuración"
+        >
+          <Settings className="w-4.5 h-4.5" />
+        </button>
+      </div>
+    </motion.header>
   );
 }

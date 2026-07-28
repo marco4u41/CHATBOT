@@ -68,6 +68,38 @@ class TestFetchGeneralIntent:
 
 class TestFetchRecommendationIntent:
     @pytest.mark.asyncio
+    async def test_any_brand_suv_city_payload_has_no_manufacturer(self) -> None:
+        search_block = MagicMock(
+            content="[VEHICLE_SEARCH_RESULTS]\nResultados: 4 vehículos"
+        )
+        tool = _mock_automotive_tool(search_vehicles=search_block)
+        orch = _orchestrator_with_tool(automotive_tool=tool)
+        ctx = UserContext(
+            mentioned_brands=[],
+            preferred_brands=["Subaru"],
+            manufacturer_cleared=True,
+            body_type="suv",
+            fuel_preference="gas",
+            budget=25_000,
+            usage="urbano",
+        )
+
+        await orch._fetch_automotive_data(
+            Intent.RECOMMENDATION,
+            ctx,
+            conversation_id="conversation-b",
+            user_id="user-1",
+        )
+
+        tool.search_vehicles.assert_awaited_once_with(
+            manufacturer=None,
+            max_price=25_000,
+            vehicle_type="suv",
+            fuel="gas",
+            limit=20,
+        )
+
+    @pytest.mark.asyncio
     async def test_calls_search_vehicles_with_budget(self) -> None:
         search_block = MagicMock(content="[VEHICLE_SEARCH]\nResults")
         tool = _mock_automotive_tool(search_vehicles=search_block)
@@ -78,7 +110,11 @@ class TestFetchRecommendationIntent:
 
         assert "VEHICLE_SEARCH" in result
         tool.search_vehicles.assert_awaited_once_with(
-            manufacturer=None, max_price=pytest.approx(57500.0), vehicle_type=None, fuel=None, limit=5,
+            manufacturer=None,
+            max_price=pytest.approx(50000.0),
+            vehicle_type=None,
+            fuel=None,
+            limit=20,
         )
 
     @pytest.mark.asyncio
@@ -91,7 +127,7 @@ class TestFetchRecommendationIntent:
         await orch._fetch_automotive_data(Intent.RECOMMENDATION, ctx)
 
         tool.search_vehicles.assert_awaited_once_with(
-            manufacturer=None, max_price=34500.0, vehicle_type="suv", fuel=None, limit=5,
+            manufacturer=None, max_price=30000.0, vehicle_type="suv", fuel=None, limit=20,
         )
 
     @pytest.mark.asyncio
@@ -104,7 +140,7 @@ class TestFetchRecommendationIntent:
         await orch._fetch_automotive_data(Intent.RECOMMENDATION, ctx)
 
         tool.search_vehicles.assert_awaited_once_with(
-            manufacturer=None, max_price=46000.0, vehicle_type=None, fuel="electrico", limit=5,
+            manufacturer=None, max_price=40000.0, vehicle_type=None, fuel="electrico", limit=20,
         )
 
     @pytest.mark.asyncio
@@ -175,7 +211,7 @@ class TestFetchRecommendationIntent:
         result = await orch._fetch_automotive_data(Intent.RECOMMENDATION, ctx)
 
         tool.search_vehicles.assert_awaited_once_with(
-            manufacturer=None, max_price=None, vehicle_type=None, fuel=None, limit=5,
+            manufacturer=None, max_price=None, vehicle_type=None, fuel=None, limit=20,
         )
         assert "VEHICLE_SEARCH" in result
 
@@ -189,7 +225,7 @@ class TestFetchRecommendationIntent:
         await orch._fetch_automotive_data(Intent.RECOMMENDATION, ctx)
 
         tool.search_vehicles.assert_awaited_once_with(
-            manufacturer=None, max_price=None, vehicle_type="truck", fuel=None, limit=5,
+            manufacturer=None, max_price=None, vehicle_type="truck", fuel=None, limit=20,
         )
 
 

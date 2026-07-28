@@ -1,28 +1,46 @@
 import type { HTMLAttributes, ReactNode } from "react";
+import { motion, type MotionProps } from "motion/react";
 import { cn } from "@/utils/cn";
 
-interface GlassCardProps extends HTMLAttributes<HTMLDivElement> {
-  hover?: boolean;
-  children: ReactNode;
-}
+type GlassCardProps = HTMLAttributes<HTMLDivElement> &
+  Partial<MotionProps> & {
+    hover?: boolean;
+    animate?: boolean;
+    children: ReactNode;
+  };
 
 export function GlassCard({
   hover = false,
+  animate = false,
   className,
   children,
   ...props
 }: GlassCardProps) {
+  const classes = cn(
+    "ax-glass--light rounded-ax-xl",
+    "shadow-ax-card",
+    "transition-all duration-200",
+    hover && "hover:border-white/[0.10] hover:shadow-ax-elevated hover:-translate-y-0.5",
+    className,
+  );
+
+  if (animate) {
+    return (
+      <motion.div
+        className={classes}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+        whileHover={hover ? { y: -2, transition: { duration: 0.2 } } : undefined}
+        {...(props as MotionProps)}
+      >
+        {children}
+      </motion.div>
+    );
+  }
+
   return (
-    <div
-      className={cn(
-        "ax-glass--light rounded-ax-xl",
-        "shadow-ax-card",
-        "transition-all duration-200",
-        hover && "hover:border-white/[0.10] hover:shadow-ax-elevated",
-        className,
-      )}
-      {...props}
-    >
+    <div className={classes} {...props}>
       {children}
     </div>
   );

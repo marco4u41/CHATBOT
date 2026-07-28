@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { Warehouse } from "lucide-react";
 import { useGarageStore } from "@/stores/garageStore";
 import { VehicleComparisonModal } from "@/components/garage/VehicleComparisonModal";
 import { translateSpec, formatPriceUSD, safeDisplay } from "@/utils/specNormalization";
@@ -53,27 +54,15 @@ export function GarageSidebar() {
       <button
         onClick={toggleSidebar}
         className={cn(
-          "fixed right-4 top-4 z-50 rounded-xl p-2.5 transition-all duration-300",
-          "ax-glass--light border border-white/[0.06]",
+          "fixed right-4 top-1/2 transform -translate-y-1/2 z-50 rounded-xl p-2.5 transition-all duration-300",
+          "ax-glass--light border border-[var(--ax-glass-border)]",
           isOpen
             ? "text-ax-gold"
             : "text-ax-text-secondary hover:text-ax-gold",
         )}
         aria-label={isOpen ? "Cerrar garaje" : "Abrir garaje"}
       >
-        <svg
-          className="h-5 w-5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0H21a.75.75 0 0 0 .75-.75V11.25a3 3 0 0 0-3-3h-1.5l-1.72-4.575A1.5 1.5 0 0 0 13.07 2.25H10.93a1.5 1.5 0 0 0-1.43 1.025L7.78 7.875H6.25a3 3 0 0 0-3 3v6.75c0 .621.504 1.125 1.125 1.125h.75"
-          />
-        </svg>
+        <Warehouse className="h-5 w-5" />
         {vehicles.length > 0 && (
           <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-ax-accent-warning text-[10px] font-bold text-black flex items-center justify-center">
             {vehicles.length}
@@ -93,14 +82,14 @@ export function GarageSidebar() {
       <aside
         className={cn(
           "fixed right-0 top-0 z-50 h-full w-80 flex flex-col",
-          "ax-glass border-l border-ax-border-subtle",
+          "ax-glass border-l border-[var(--ax-glass-border)]",
           "transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]",
           isOpen ? "translate-x-0" : "translate-x-full",
         )}
         aria-label="Garaje Virtual"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-white/[0.06]">
+        <div className="flex items-center justify-between p-4 border-b border-[var(--ax-glass-border)]">
           <div>
             <h2 className="text-sm font-bold text-platinum tracking-wide uppercase">
               Garaje Virtual
@@ -116,7 +105,7 @@ export function GarageSidebar() {
           </div>
           <button
             onClick={toggleSidebar}
-              className="rounded-lg p-1.5 text-ax-text-muted hover:text-ax-text-primary hover:bg-white/[0.04] transition-colors"
+              className="rounded-lg p-1.5 text-ax-text-muted hover:text-ax-text-primary hover:bg-[var(--ax-glass-highlight)] transition-colors"
             aria-label="Cerrar garaje"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -148,7 +137,7 @@ export function GarageSidebar() {
                     "rounded-xl p-3 transition-all duration-200 animate-ax-scale-in cursor-pointer",
                     isSelected
                       ? "ax-glass border border-ax-gold/25 bg-ax-gold/[0.06]"
-                      : "ax-glass--light border border-transparent hover:border-white/[0.08]",
+                      : "ax-glass--light border border-transparent hover:border-[var(--ax-glass-border)]",
                   )}
                   onClick={() => toggleSelection(vehicle.id)}
                   role="checkbox"
@@ -169,7 +158,7 @@ export function GarageSidebar() {
                           "mt-0.5 w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-all",
                           isSelected
                             ? "border-ax-gold bg-ax-gold"
-                            : "border-white/[0.15] bg-transparent",
+                            : "border-[var(--ax-glass-border)] bg-transparent",
                         )}
                       >
                         {isSelected && (
@@ -201,17 +190,17 @@ export function GarageSidebar() {
 
                   <div className="flex flex-wrap gap-1 mt-2">
                     {vehicle.engine && (
-                      <span className="rounded-full px-2 py-0.5 text-[10px] text-ax-text-secondary bg-white/[0.04] border border-white/[0.06]">
-                        {safeDisplay(vehicle.engine)}
-                      </span>
-                    )}
-                    {vehicle.fuel_type && (
-                      <span className="rounded-full px-2 py-0.5 text-[10px] text-ax-text-secondary bg-white/[0.04] border border-white/[0.06]">
-                        {translateSpec(vehicle.fuel_type, "fuel")}
-                      </span>
-                    )}
-                    {vehicle.body_type && (
-                      <span className="rounded-full px-2 py-0.5 text-[10px] text-ax-text-secondary bg-white/[0.04] border border-white/[0.06]">
+                       <span className="rounded-full px-2 py-0.5 text-[10px] text-ax-text-secondary bg-[var(--ax-glass-highlight)] border border-[var(--ax-glass-border)]">
+                         {safeDisplay(vehicle.engine)}
+                       </span>
+                     )}
+                     {vehicle.fuel_type && (
+                       <span className="rounded-full px-2 py-0.5 text-[10px] text-ax-text-secondary bg-[var(--ax-glass-highlight)] border border-[var(--ax-glass-border)]">
+                         {translateSpec(vehicle.fuel_type, "fuel")}
+                       </span>
+                     )}
+                     {vehicle.body_type && (
+                       <span className="rounded-full px-2 py-0.5 text-[10px] text-ax-text-secondary bg-[var(--ax-glass-highlight)] border border-[var(--ax-glass-border)]">
                         {translateSpec(vehicle.body_type, "body")}
                       </span>
                     )}
@@ -229,7 +218,7 @@ export function GarageSidebar() {
 
         {/* Footer Actions */}
         {vehicles.length > 0 && (
-          <div className="p-3 border-t border-white/[0.06] space-y-2">
+          <div className="p-3 border-t border-[var(--ax-glass-border)] space-y-2">
             {selectedCount > 0 && selectedCount < 2 && (
               <p className="text-[10px] text-ax-text-muted text-center">
                 Selecciona al menos 2 vehículos para comparar

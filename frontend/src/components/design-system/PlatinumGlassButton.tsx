@@ -3,72 +3,30 @@ import { motion } from "motion/react";
 import { Slot } from "@radix-ui/react-slot";
 import { cn } from "@/utils/cn";
 
-type ButtonVariant =
-  | "primary"
-  | "secondary"
-  | "ghost"
-  | "danger"
-  | "outline"
-  | "premium";
-type ButtonSize = "xs" | "sm" | "md" | "lg";
+type PlatinumSize = "xs" | "sm" | "md" | "lg";
 
-interface GlassButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: ButtonVariant;
-  size?: ButtonSize;
+interface PlatinumGlassButtonProps
+  extends ButtonHTMLAttributes<HTMLButtonElement> {
+  size?: PlatinumSize;
   asChild?: boolean;
   isLoading?: boolean;
   leftIcon?: ReactNode;
   rightIcon?: ReactNode;
 }
 
-const variantClasses: Record<ButtonVariant, string> = {
-  primary: cn(
-    "bg-gradient-to-br from-ax-wine to-ax-wine/80",
-    "text-white font-semibold",
-    "border border-ax-wine/30",
-    "shadow-ax-glow-wine",
-    "hover:brightness-110 hover:shadow-[0_0_24px_rgba(139,49,82,0.25)]",
-  ),
-  secondary: cn(
-    "bg-ax-surface-light",
-    "text-ax-text-secondary border border-white/[0.08]",
-    "hover:bg-ax-surface-light/80 hover:text-ax-text-primary",
-  ),
-  ghost: cn(
-    "bg-transparent text-ax-text-muted",
-    "hover:text-ax-text-primary hover:bg-white/[0.04]",
-  ),
-  danger: cn(
-    "bg-ax-accent-danger",
-    "text-white font-semibold",
-    "border border-ax-accent-danger/30",
-    "hover:brightness-110",
-  ),
-  outline: cn(
-    "bg-transparent text-ax-wine-light",
-    "border border-ax-wine/30",
-    "hover:bg-ax-wine/[0.06] hover:border-ax-wine/50",
-  ),
-  premium: cn(
-    "bg-gradient-to-br from-ax-gold/12 to-ax-gold/4",
-    "text-ax-gold border border-ax-gold/20",
-    "shadow-ax-glow-gold",
-    "hover:from-ax-gold/20 hover:to-ax-gold/8",
-    "hover:border-ax-gold/35",
-  ),
-};
-
-const sizeClasses: Record<ButtonSize, string> = {
+const sizeClasses: Record<PlatinumSize, string> = {
   xs: "px-2.5 py-1 text-[11px] rounded-ax-sm gap-1",
   sm: "px-3 py-1.5 text-xs rounded-ax-sm gap-1.5",
   md: "px-4 py-2 text-sm rounded-ax-md gap-2",
   lg: "px-6 py-2.5 text-sm rounded-ax-lg gap-2",
 };
 
-export const GlassButton = forwardRef<HTMLButtonElement, GlassButtonProps>(
+export const PlatinumGlassButton = forwardRef<
+  HTMLButtonElement,
+  PlatinumGlassButtonProps
+>(
   (
     {
-      variant = "primary",
       size = "md",
       asChild = false,
       isLoading = false,
@@ -81,7 +39,6 @@ export const GlassButton = forwardRef<HTMLButtonElement, GlassButtonProps>(
       onClick,
       tabIndex,
       "aria-label": ariaLabel,
-      "aria-describedby": ariaDescribedby,
       form,
       name,
       value,
@@ -92,12 +49,11 @@ export const GlassButton = forwardRef<HTMLButtonElement, GlassButtonProps>(
     const isDisabled = disabled || isLoading;
 
     const classes = cn(
-      "inline-flex items-center justify-center font-ax-sans",
+      "ax-platinum-btn",
+      "inline-flex items-center justify-center font-ax-sans font-medium",
       "transition-all duration-200 ease-out",
-      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ax-wine/30 focus-visible:ring-offset-2 focus-visible:ring-offset-ax-bg-deep",
+      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:ring-offset-2 focus-visible:ring-offset-ax-bg-deep",
       "disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none",
-      "active:scale-[0.97]",
-      variantClasses[variant],
       sizeClasses[size],
       className,
     );
@@ -133,7 +89,6 @@ export const GlassButton = forwardRef<HTMLButtonElement, GlassButtonProps>(
         onClick={onClick}
         tabIndex={tabIndex}
         aria-label={ariaLabel}
-        aria-describedby={ariaDescribedby}
         form={form}
         name={name}
         value={value}
@@ -149,4 +104,4 @@ export const GlassButton = forwardRef<HTMLButtonElement, GlassButtonProps>(
   },
 );
 
-GlassButton.displayName = "GlassButton";
+PlatinumGlassButton.displayName = "PlatinumGlassButton";

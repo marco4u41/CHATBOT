@@ -159,7 +159,7 @@ class TestConversationSummaryField:
 
 class TestContextManagerSummaries:
     @pytest.mark.asyncio
-    async def test_build_context_loads_recent_summaries(self) -> None:
+    async def test_build_context_does_not_load_other_conversation_summaries(self) -> None:
         from app.domain.agent.context.manager import ContextManager
 
         conv1 = Conversation(title="conv1", summary="Vehículos: Honda Civic")
@@ -180,8 +180,9 @@ class TestContextManagerSummaries:
             messages,
             exclude_conversation_id="current",
         )
-        assert "Honda Civic" in context_block
-        assert "$20,000" in context_block
+        assert "Honda Civic" not in context_block
+        assert "$20,000" not in context_block
+        mock_repo.get_recent.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_build_context_excludes_current_conversation(self) -> None:
@@ -214,7 +215,7 @@ class TestContextManagerSummaries:
             exclude_conversation_id="conv-current-123",
         )
         assert "ruido" not in context_block
-        assert "Toyota" in context_block
+        assert "Toyota" not in context_block
 
     @pytest.mark.asyncio
     async def test_build_context_no_repo_still_works(self) -> None:

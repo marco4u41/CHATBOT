@@ -1,7 +1,8 @@
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from "react";
+import { motion } from "motion/react";
 import { cn } from "@/utils/cn";
 
-type IconButtonVariant = "default" | "wine" | "ghost" | "glass";
+type IconButtonVariant = "default" | "wine" | "ghost" | "glass" | "platinum";
 type IconButtonSize = "xs" | "sm" | "md" | "lg";
 
 interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -29,6 +30,10 @@ const variantClasses: Record<IconButtonVariant, string> = {
     "ax-glass--light text-ax-text-secondary",
     "hover:text-ax-text-primary",
   ),
+  platinum: cn(
+    "bg-white/[0.06] text-ax-text-secondary border border-white/[0.12]",
+    "hover:bg-white/[0.10] hover:text-ax-text-primary hover:border-white/[0.18]",
+  ),
 };
 
 const sizeClasses: Record<IconButtonSize, string> = {
@@ -51,10 +56,12 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
     },
     ref,
   ) => {
+    const isDisabled = disabled || isLoading;
+
     return (
-      <button
+      <motion.button
         ref={ref}
-        disabled={disabled || isLoading}
+        disabled={isDisabled}
         className={cn(
           "inline-flex items-center justify-center",
           "transition-all duration-200 ease-out",
@@ -65,7 +72,16 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
           sizeClasses[size],
           className,
         )}
-        {...props}
+        whileTap={isDisabled ? undefined : { scale: 0.93 }}
+        transition={{ duration: 0.15 }}
+        aria-label={props["aria-label"]}
+        aria-describedby={props["aria-describedby"]}
+        type={props.type}
+        form={props.form}
+        name={props.name}
+        value={props.value}
+        onClick={props.onClick}
+        tabIndex={props.tabIndex}
       >
         {isLoading ? (
           <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
@@ -75,7 +91,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
         ) : (
           children
         )}
-      </button>
+      </motion.button>
     );
   },
 );

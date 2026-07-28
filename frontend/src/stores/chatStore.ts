@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { Message } from "@/types/chat";
 import type { PhysicalPanelFilters } from "@/types/vehicle";
 import { apiClient } from "@/api/client";
+import { useConversationStore } from "./conversationStore";
 
 interface ChatState {
   messages: Message[];
@@ -10,6 +11,7 @@ interface ChatState {
   streamingContent: string;
   error: string | null;
   physicalFilters: PhysicalPanelFilters;
+  lastSendTime: number;
 
   sendMessage: (content: string) => void;
   stopStreaming: () => void;
@@ -31,6 +33,8 @@ function buildFilterContext(filters: PhysicalPanelFilters): string {
   return `\n[Filtros activos del panel: ${parts.join(" | ")}]`;
 }
 
+const SEND_DEBOUNCE_MS = 500;
+
 export const useChatStore = create<ChatState>((set, get) => ({
   messages: [],
   isStreaming: false,
@@ -38,10 +42,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
   streamingContent: "",
   error: null,
   physicalFilters: {},
+  lastSendTime: 0,
 
   sendMessage: (content: string) => {
     const state = get();
     if (state.isStreaming || !content.trim()) return;
+
+    const now = Date.now();
+    if (now - state.lastSendTime < SEND_DEBOUNCE_MS) return;
 
     const filterContext = buildFilterContext(state.physicalFilters);
     const enrichedContent = filterContext
@@ -61,6 +69,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       isStreaming: true,
       streamingContent: "",
       error: null,
+      lastSendTime: now,
     }));
 
     activeController = apiClient.streamChat(
@@ -82,6 +91,15 @@ export const useChatStore = create<ChatState>((set, get) => ({
             streamingContent: "",
             currentConversationId: conversationId,
           }));
+
+          if (conversationId) {
+            const userMsg = get().messages.find(
+              (m) => m.role === "user" && m.conversation_id === "",
+            );
+            const title = userMsg ? userMsg.content.slice(0, 80) : "Nueva conversación";
+            useConversationStore.getState().addConversation(conversationId, title);
+            useConversationStore.getState().setActive(conversationId);
+          }
         } else {
           set((s) => ({
             streamingContent: s.streamingContent + chunkContent,
@@ -113,7 +131,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
   },
 
-  clearMessages: () => set({ messages: [], currentConversationId: null }),
+  clearMessages: () => set({ messages: [], currentConversationId: null, streamingContent: "" }),
   clearError: () => set({ error: null }),
 
   setPhysicalFilters: (filters) => set({ physicalFilters: filters }),

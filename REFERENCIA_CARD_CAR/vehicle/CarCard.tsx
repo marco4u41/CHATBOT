@@ -224,7 +224,7 @@ function RadarChart({ scores, size }: { scores: VehicleScores; size: number }) {
             key={scale}
             points={pts}
             fill="none"
-            stroke="var(--ax-glass-border)"
+            stroke="rgba(255,255,255,0.08)"
             strokeWidth="0.5"
           />
         );
@@ -240,7 +240,7 @@ function RadarChart({ scores, size }: { scores: VehicleScores; size: number }) {
             y1={center}
             x2={center + radius * Math.cos(angle)}
             y2={center + radius * Math.sin(angle)}
-            stroke="var(--ax-glass-border)"
+            stroke="rgba(255,255,255,0.06)"
             strokeWidth="0.5"
           />
         );

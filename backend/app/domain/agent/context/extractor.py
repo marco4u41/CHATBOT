@@ -71,6 +71,30 @@ _BRAND_PREFERENCE_PATTERNS: list[str] = [
     r"(?:tengo\s+(?:preferencia|predilección|debilidad)\s+por\s+(?:la?s?\s+)?)",
 ]
 
+_NO_BRAND_PREFERENCE_PATTERNS: list[str] = [
+    r"\b(?:de\s+)?cualquier\s+marca\b",
+    r"\bsin\s+preferencia\s+(?:de|por)\s+marca\b",
+    r"\bno\s+(?:tengo|hay)\s+preferencia\s+(?:de|por)\s+marca\b",
+    r"\b(?:la\s+)?marca\s+(?:me\s+)?da\s+igual\b",
+]
+
+_BODY_TYPE_KEYWORDS: dict[str, list[str]] = {
+    "suv": ["suv", "crossover"],
+    "sedan": ["sedan", "sedán", "berlina"],
+    "hatchback": ["hatchback"],
+    "truck": ["pickup", "pick-up", "camioneta de carga"],
+    "coupe": ["coupe", "coupé"],
+    "van": ["van", "minivan"],
+    "wagon": ["wagon", "familiar"],
+}
+
+_FUEL_KEYWORDS: dict[str, list[str]] = {
+    "gas": ["gasolina", "gasoline", "nafta"],
+    "diesel": ["diésel", "diesel"],
+    "electric": ["eléctrico", "electrico", "electric", "ev"],
+    "hybrid": ["híbrido", "hibrido", "hybrid"],
+}
+
 
 @dataclass
 class _ExtractionState:
@@ -82,6 +106,9 @@ class _ExtractionState:
     has_issue: bool = False
     symptoms: list[str] = field(default_factory=list)
     preferred_brands: list[str] = field(default_factory=list)
+    body_type: str | None = None
+    fuel_preference: str | None = None
+    manufacturer_cleared: bool = False
 
 
 class ContextExtractor:
@@ -102,13 +129,22 @@ class ContextExtractor:
             if msg.role.value != "user":
                 continue
             text = msg.content.lower().strip()
+            clears_manufacturer = self._clears_manufacturer(text)
+            if clears_manufacturer:
+                state.brands_found.clear()
+                state.preferred_brands.clear()
+                state.vehicles.clear()
+                state.manufacturer_cleared = True
             self._extract_brands(text, state)
             self._extract_vehicles(text, state)
             self._extract_budget(text, state)
             self._extract_usage(text, state)
+            self._extract_body_type(text, state)
+            self._extract_fuel(text, state)
             self._extract_preferences(text, state)
             self._extract_diagnosis(text, state)
-            self._extract_preferred_brands(text, state)
+            if not clears_manufacturer:
+                self._extract_preferred_brands(text, state)
 
         return UserContext(
             vehicles=state.vehicles,
@@ -121,12 +157,19 @@ class ContextExtractor:
             has_diagnosed_issue=state.has_issue,
             diagnosis_symptoms=state.symptoms,
             preferred_brands=state.preferred_brands,
+            fuel_preference=state.fuel_preference,
+            body_type=state.body_type,
+            manufacturer_cleared=state.manufacturer_cleared,
         )
 
     def _extract_brands(self, text: str, state: _ExtractionState) -> None:
-        for brand in _AUTOMOTIVE_BRANDS:
-            if brand in text and brand not in state.brands_found:
-                state.brands_found.append(brand)
+        found = [
+            brand for brand in _AUTOMOTIVE_BRANDS
+            if re.search(rf"(?<!\w){re.escape(brand)}(?!\w)", text)
+        ]
+        if found:
+            state.brands_found = found
+            state.manufacturer_cleared = False
 
     def _extract_vehicles(self, text: str, state: _ExtractionState) -> None:
         for brand in _AUTOMOTIVE_BRANDS:
@@ -156,8 +199,6 @@ class ContextExtractor:
                 )
 
     def _extract_budget(self, text: str, state: _ExtractionState) -> None:
-        if state.budget is not None:
-            return
         for pattern in _BUDGET_PATTERNS:
             match = re.search(pattern, text, re.IGNORECASE)
             if match:
@@ -171,12 +212,29 @@ class ContextExtractor:
                     continue
 
     def _extract_usage(self, text: str, state: _ExtractionState) -> None:
-        if state.usage:
-            return
         for usage, keywords in _USAGE_KEYWORDS.items():
             if any(kw in text for kw in keywords):
                 state.usage = usage
                 return
+
+    def _extract_body_type(self, text: str, state: _ExtractionState) -> None:
+        for body_type, keywords in _BODY_TYPE_KEYWORDS.items():
+            if any(re.search(rf"(?<!\w){re.escape(keyword)}(?!\w)", text) for keyword in keywords):
+                state.body_type = body_type
+                return
+
+    def _extract_fuel(self, text: str, state: _ExtractionState) -> None:
+        for fuel, keywords in _FUEL_KEYWORDS.items():
+            if any(re.search(rf"(?<!\w){re.escape(keyword)}(?!\w)", text) for keyword in keywords):
+                state.fuel_preference = fuel
+                return
+
+    @staticmethod
+    def _clears_manufacturer(text: str) -> bool:
+        return any(
+            re.search(pattern, text, re.IGNORECASE)
+            for pattern in _NO_BRAND_PREFERENCE_PATTERNS
+        )
 
     def _extract_preferences(self, text: str, state: _ExtractionState) -> None:
         for pref, keywords in _PREFERENCE_KEYWORDS.items():

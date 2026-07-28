@@ -1,4 +1,5 @@
 import logging
+import re
 from dataclasses import dataclass, field
 
 from app.domain.agent.automotive_tool import AutomotiveAgentTool
@@ -71,6 +72,8 @@ class AgentOrchestrator:
         profile_id: str | None = None,
         focus: str = "all",
         usage: str = "",
+        conversation_id: str | None = None,
+        user_id: str | None = None,
     ) -> OrchestrationResult:
         classification = self.classify_intent(
             message,
@@ -85,10 +88,16 @@ class AgentOrchestrator:
             terrain=terrain,
             engine_type=engine_type,
             profile_id=profile_id,
+            exclude_conversation_id=conversation_id,
+            conversation_id=conversation_id,
+            user_id=user_id,
         )
 
         automotive_data = await self._fetch_automotive_data(
-            classification.intent, user_context,
+            classification.intent,
+            user_context,
+            conversation_id=conversation_id,
+            user_id=user_id,
         )
 
         capability_context = CapabilityContext(
@@ -167,7 +176,12 @@ class AgentOrchestrator:
         return self._registry
 
     async def _fetch_automotive_data(
-        self, intent: Intent, user_context: UserContext,
+        self,
+        intent: Intent,
+        user_context: UserContext,
+        *,
+        conversation_id: str | None = None,
+        user_id: str | None = None,
     ) -> str:
         """Fetch relevant automotive data blocks based on intent and context.
 
@@ -192,7 +206,10 @@ class AgentOrchestrator:
 
             if intent == Intent.RECOMMENDATION:
                 blocks = await self._fetch_recommendation_data(
-                    user_context, fetched,
+                    user_context,
+                    fetched,
+                    conversation_id=conversation_id,
+                    user_id=user_id,
                 )
             elif intent == Intent.COMPARISON:
                 blocks = await self._fetch_comparison_data(
@@ -213,6 +230,9 @@ class AgentOrchestrator:
         self,
         user_context: UserContext,
         fetched: set[str],
+        *,
+        conversation_id: str | None = None,
+        user_id: str | None = None,
     ) -> list[str]:
         """Fetch data for RECOMMENDATION intent.
 
@@ -224,51 +244,65 @@ class AgentOrchestrator:
 
         max_price = None
         if user_context.budget:
-            max_price = user_context.budget * 1.15
+            max_price = user_context.budget
 
-        vehicle_type = self._map_usage_to_vehicle_type(user_context.usage)
+        vehicle_type = (
+            user_context.body_type
+            or self._map_usage_to_vehicle_type(user_context.usage)
+        )
 
-        fuel = None
-        if user_context.engine_type:
-            fuel = user_context.engine_type
+        fuel = user_context.fuel_preference or user_context.engine_type
 
-        # Extract strict brand filter from user context or message
         manufacturer = None
-        if user_context.mentioned_brands:
-            # Use the first mentioned brand as the strict filter
+        if user_context.manufacturer_cleared:
+            manufacturer = None
+        elif user_context.mentioned_brands:
             manufacturer = user_context.mentioned_brands[0]
+        elif user_context.preferred_brands:
+            manufacturer = user_context.preferred_brands[0]
         elif user_context.vehicles:
-            # Use the brand from the user's primary vehicle
             manufacturer = user_context.vehicles[0].brand
+
+        final_filters = {
+            "manufacturer": manufacturer,
+            "body_type": vehicle_type,
+            "fuel_type": fuel,
+            "max_price": max_price,
+            "usage": user_context.usage or None,
+        }
+        logger.info(
+            "Vehicle search conversation_id=%s user_id=%s final_filters=%s",
+            conversation_id or "-",
+            user_id or "-",
+            final_filters,
+        )
 
         search_result = await self._automotive_tool.search_vehicles(
             manufacturer=manufacturer,
             max_price=max_price,
             vehicle_type=vehicle_type,
             fuel=fuel,
-            limit=5,
+            # Fetch enough rows to cover several distinct models; the
+            # repository stores multiple model years as separate rows.
+            limit=20,
+        )
+        logger.info(
+            "Vehicle search results conversation_id=%s user_id=%s count=%s",
+            conversation_id or "-",
+            user_id or "-",
+            self._result_count(search_result),
         )
         if search_result:
             blocks.append(search_result.content)
             fetched.add("search")
 
-        # Also search without brand filter if results are insufficient
-        # This gives the AI context about what's available overall
-        if not search_result and manufacturer:
-            unfiltered_result = await self._automotive_tool.search_vehicles(
-                max_price=max_price,
-                vehicle_type=vehicle_type,
-                fuel=fuel,
-                limit=5,
+        if not search_result:
+            blocks.append(
+                "[VEHICLE_SEARCH_EMPTY]\n"
+                f"No hubo resultados con estos filtros: {final_filters}.\n"
+                "Muestra estos filtros al usuario y ofrece ampliarlos. "
+                "No atribuyas la falta de resultados a una marca distinta."
             )
-            if unfiltered_result:
-                blocks.append(
-                    f"[SEARCH_CONTEXT_SIN_FILTRO]\n"
-                    f"No se encontraron resultados para {manufacturer}. "
-                    f"Resultados generales disponibles:\n\n"
-                    f"{unfiltered_result.content}"
-                )
-                fetched.add("search_unfiltered")
 
         for vehicle in user_context.vehicles[:2]:
             brand = vehicle.brand.strip()
@@ -309,6 +343,14 @@ class AgentOrchestrator:
                 fetched.add(key)
 
         return blocks
+
+    @staticmethod
+    def _result_count(search_result: object | None) -> int:
+        if search_result is None:
+            return 0
+        content = getattr(search_result, "content", "")
+        match = re.search(r"Resultados:\s*(\d+)", content)
+        return int(match.group(1)) if match else -1
 
     async def _fetch_comparison_data(
         self,

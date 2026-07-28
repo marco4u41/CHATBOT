@@ -7,8 +7,6 @@ from app.domain.interfaces.repository import ConversationRepository, MessageRepo
 from app.domain.models.conversation import Conversation
 from app.domain.models.message import Message, MessageRole
 
-_DEFAULT_PROFILE_ID = "default"
-
 _OUT_OF_SCOPE_RESPONSE = (
     "Estoy especializado en temas automotrices. Puedo ayudarte con "
     "recomendaciones de vehículos, comparaciones, diagnóstico de fallas, "
@@ -84,7 +82,9 @@ class ChatUseCase:
             budget=budget,
             terrain=terrain,
             engine_type=engine_type,
-            profile_id=_DEFAULT_PROFILE_ID,
+            profile_id=user_id or f"conversation:{conversation.id}",
+            conversation_id=conversation.id,
+            user_id=user_id,
         )
 
         system_prompt = result.system_prompt

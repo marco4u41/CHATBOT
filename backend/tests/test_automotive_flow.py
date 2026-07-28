@@ -363,6 +363,34 @@ class TestProfileAvailable:
         call_kw = mock_cm.build_context.call_args
         assert call_kw[1].get("profile_id") == "user-123"
 
+    async def test_two_users_receive_distinct_profile_ids(self) -> None:
+        mock_cm = MagicMock()
+        mock_cm.build_context = AsyncMock(
+            return_value=(UserContext(), ""),
+        )
+        orch = _orch(context_manager=mock_cm)
+        use_case, _ = _use_case(
+            orch,
+            history=[_msg("quiero comprar un auto")],
+        )
+
+        async for _ in use_case.stream_response(
+            "quiero comprar un auto",
+            user_id="user-a",
+        ):
+            pass
+        async for _ in use_case.stream_response(
+            "quiero comprar un auto",
+            user_id="user-b",
+        ):
+            pass
+
+        profile_ids = [
+            call.kwargs["profile_id"]
+            for call in mock_cm.build_context.await_args_list
+        ]
+        assert profile_ids == ["user-a", "user-b"]
+
 
 # ===========================================================================
 # 10. Messages saved in correct order

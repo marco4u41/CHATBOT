@@ -232,3 +232,83 @@ class TestContextManagerPreferredBrands:
         ctx, _ = await mgr.build_context(messages)
         assert "toyota" in ctx.mentioned_brands
         assert "toyota" in ctx.preferred_brands
+
+
+class TestRecommendationContextIsolation:
+    @staticmethod
+    def _message(content: str, conversation_id: str = "conversation-b") -> Message:
+        return Message(
+            content=content,
+            role=MessageRole.USER,
+            conversation_id=conversation_id,
+        )
+
+    def test_any_brand_clears_brand_and_extracts_current_filters(self) -> None:
+        ctx = ContextExtractor().extract([
+            self._message("Prefiero Subaru"),
+            self._message(
+                "¿Puedes recomendarme un SUV para la ciudad, a gasolina, "
+                "por menos de 25.000 dólares, de cualquier marca?"
+            ),
+        ])
+
+        assert ctx.mentioned_brands == []
+        assert ctx.preferred_brands == []
+        assert ctx.manufacturer_cleared is True
+        assert ctx.body_type == "suv"
+        assert ctx.fuel_preference == "gas"
+        assert ctx.budget == 25_000
+        assert ctx.usage == "urbano"
+
+    @pytest.mark.parametrize(
+        "message",
+        ["en realidad, cualquier marca", "sin preferencia de marca"],
+    )
+    def test_explicit_no_brand_phrases_clear_toyota(self, message: str) -> None:
+        ctx = ContextExtractor().extract([
+            self._message("prefiero Toyota"),
+            self._message(message),
+        ])
+
+        assert ctx.manufacturer_cleared is True
+        assert ctx.mentioned_brands == []
+        assert ctx.preferred_brands == []
+
+    def test_current_message_overwrites_budget_and_body_type(self) -> None:
+        ctx = ContextExtractor().extract([
+            self._message("Busco un sedán por 40.000 dólares"),
+            self._message("Ahora quiero un SUV por 25.000 dólares"),
+        ])
+
+        assert ctx.body_type == "suv"
+        assert ctx.budget == 25_000
+
+    @pytest.mark.asyncio
+    async def test_new_conversation_ignores_mentioned_brand_from_profile(self) -> None:
+        from app.domain.agent.context.manager import ContextManager
+
+        stale_profile = UserProfile(
+            id="user-1",
+            mentioned_brands=["subaru"],
+            budget_usd=40_000,
+            usage="offroad",
+        )
+        profile_manager = AsyncMock()
+        profile_manager.get_profile.return_value = stale_profile
+        profile_manager.update_profile.return_value = stale_profile
+        manager = ContextManager(profile_manager=profile_manager)
+
+        ctx, _ = await manager.build_context(
+            [self._message(
+                "Recomiéndame un SUV de cualquier marca por 25.000 dólares"
+            )],
+            profile_id="user-1",
+            conversation_id="conversation-b",
+            user_id="user-1",
+        )
+
+        assert ctx.mentioned_brands == []
+        assert ctx.manufacturer_cleared is True
+        assert ctx.budget == 25_000
+        assert ctx.body_type == "suv"
+        assert ctx.usage == ""
