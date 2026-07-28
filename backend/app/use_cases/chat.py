@@ -1,5 +1,6 @@
 from collections.abc import AsyncIterator
 
+from app.domain.agent.intent import Intent
 from app.domain.agent.orchestrator import AgentOrchestrator
 from app.domain.exceptions import MessageValidationError
 from app.domain.interfaces.repository import ConversationRepository, MessageRepository
@@ -7,6 +8,12 @@ from app.domain.models.conversation import Conversation
 from app.domain.models.message import Message, MessageRole
 
 _DEFAULT_PROFILE_ID = "default"
+
+_OUT_OF_SCOPE_RESPONSE = (
+    "Estoy especializado en temas automotrices. Puedo ayudarte con "
+    "recomendaciones de vehículos, comparaciones, diagnóstico de fallas, "
+    "mantenimiento y consultas relacionadas."
+)
 
 
 class ChatUseCase:
@@ -46,6 +53,31 @@ class ChatUseCase:
 
         history = await self._message_repo.get_last_n(conversation.id, 20)
 
+        classification = self._orchestrator.classify_intent(
+            content.strip(),
+            budget=budget,
+            terrain=terrain,
+            engine_type=engine_type,
+        )
+
+        if classification.intent == Intent.OUT_OF_SCOPE:
+            assistant_message = Message(
+                content=_OUT_OF_SCOPE_RESPONSE,
+                role=MessageRole.ASSISTANT,
+                conversation_id=conversation.id,
+            )
+            await self._message_repo.create(assistant_message)
+            conversation.increment_message_count()
+
+            if conversation.message_count <= 2:
+                title = content[:80] + ("..." if len(content) > 80 else "")
+                conversation.title = title
+                await self._conversation_repo.update(conversation)
+
+            yield _OUT_OF_SCOPE_RESPONSE, False, conversation.id
+            yield "", True, conversation.id
+            return
+
         result = await self._orchestrator.orchestrate(
             content.strip(),
             history,
@@ -80,9 +112,15 @@ class ChatUseCase:
 
         yield "", True, conversation.id
 
-    async def _ensure_conversation(self, conversation_id: str | None, user_id: str | None = None) -> Conversation:
+    async def _ensure_conversation(
+        self,
+        conversation_id: str | None,
+        user_id: str | None = None,
+    ) -> Conversation:
         if conversation_id:
-            conversation = await self._conversation_repo.get_by_id(conversation_id, user_id=user_id)
+            conversation = await self._conversation_repo.get_by_id(
+                conversation_id, user_id=user_id,
+            )
             if conversation:
                 return conversation
 

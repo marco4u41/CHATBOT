@@ -15,11 +15,10 @@ export function GlassCard({
   return (
     <div
       className={cn(
-        "ax-glass rounded-2xl",
-        "border border-white/[0.06]",
+        "ax-glass--light rounded-ax-xl",
         "shadow-ax-card",
         "transition-all duration-200",
-        hover && "hover:border-white/[0.1] hover:shadow-ax-elevated",
+        hover && "hover:border-white/[0.10] hover:shadow-ax-elevated",
         className,
       )}
       {...props}
@@ -53,7 +52,7 @@ export function GlassCardHeader({
       {...props}
     >
       {icon && (
-        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-ax-surface-light border border-white/[0.06]">
+        <div className="flex items-center justify-center w-8 h-8 rounded-ax-sm bg-ax-surface-light border border-white/[0.06]">
           {icon}
         </div>
       )}

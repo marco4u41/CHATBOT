@@ -30,7 +30,6 @@ export default function App() {
   }, [isAuthenticated, loadGarage]);
 
   const setViewStable = useCallback((v: "chat" | "dashboard") => {
-    // Prevent non-admin users from accessing dashboard
     if (v === "dashboard" && !isAdmin) {
       return;
     }
@@ -59,13 +58,13 @@ export default function App() {
       <div className="min-h-screen flex items-center justify-center bg-ax-bg-deep">
         <div className="ax-ambient-bg" aria-hidden="true" />
         <div className="flex flex-col items-center gap-4 relative z-10">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-ax-accent-primary/20 to-ax-gold/10 flex items-center justify-center border border-ax-accent-primary/20 animate-ax-scale-in">
-            <svg className="h-8 w-8 text-ax-accent-primary/80 animate-spin" fill="none" viewBox="0 0 24 24">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-ax-wine/20 to-ax-wine/5 flex items-center justify-center border border-ax-wine/15 animate-ax-scale-in">
+            <svg className="h-8 w-8 text-ax-wine-light/70 animate-spin" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
             </svg>
           </div>
-          <p className="text-xs text-ax-text-muted">Cargando...</p>
+          <p className="text-xs text-ax-text-muted font-ax-sans">Cargando...</p>
         </div>
       </div>
     );
@@ -87,7 +86,8 @@ export default function App() {
         onMobileClose={closeSidebar}
       />
 
-      <main className="flex-1 flex flex-col min-w-0 relative z-10 min-h-0">
+      {/* Main content area — visually separated from sidebar */}
+      <main className="flex-1 flex flex-col min-w-0 relative z-10 min-h-0 bg-ax-bg-deep/60">
         <Header view={view} onToggleSidebar={toggleSidebar} />
 
         <div className="flex-1 flex flex-col min-h-0 overflow-hidden">

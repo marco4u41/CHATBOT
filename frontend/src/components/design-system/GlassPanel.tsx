@@ -19,10 +19,10 @@ const variantClasses: Record<GlassVariant, string> = {
 
 const radiusClasses: Record<GlassRadius, string> = {
   none: "",
-  sm: "rounded-lg",
-  md: "rounded-xl",
-  lg: "rounded-2xl",
-  xl: "rounded-3xl",
+  sm: "rounded-ax-sm",
+  md: "rounded-ax-md",
+  lg: "rounded-ax-lg",
+  xl: "rounded-ax-xl",
 };
 
 export function GlassPanel({

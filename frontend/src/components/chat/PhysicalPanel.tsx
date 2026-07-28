@@ -21,7 +21,7 @@ export function PhysicalPanel() {
           "rounded-xl px-3 py-1.5 text-xs font-medium transition-all duration-200 flex items-center gap-2",
           "border",
           hasFilters
-            ? "text-ax-accent-warning border-ax-accent-warning/30 bg-ax-accent-warning/[0.06]"
+            ? "text-ax-gold border-ax-gold/25 bg-ax-gold/[0.06]"
             : "text-ax-text-muted hover:text-ax-text-secondary bg-white/[0.03] border-white/[0.06] hover:bg-white/[0.05]",
         )}
       >
@@ -30,7 +30,7 @@ export function PhysicalPanel() {
         </svg>
         Panel Fisico
         {hasFilters && (
-          <span className="w-1.5 h-1.5 rounded-full bg-ax-accent-warning animate-ax-glow-pulse" />
+          <span className="w-1.5 h-1.5 rounded-full bg-ax-gold animate-ax-glow-pulse" />
         )}
       </button>
 
@@ -66,7 +66,7 @@ export function PhysicalPanel() {
                   })
                 }
                 placeholder="Ej: 25000"
-                className="w-full rounded-lg px-3 py-2 text-xs bg-ax-bg-deep/90 text-ax-text-primary placeholder:text-ax-text-subtle border border-white/[0.08] shadow-ax-inset focus:outline-none focus:border-ax-accent-primary/25 focus:shadow-[0_0_0_3px_rgba(111,38,64,0.06)] transition-all duration-200"
+                className="w-full rounded-lg px-3 py-2 text-xs bg-ax-bg-deep/90 text-ax-text-primary placeholder:text-ax-text-subtle border border-white/[0.08] shadow-ax-inset focus:outline-none focus:border-ax-accent-info/25 focus:shadow-[0_0_0_3px_rgba(79,127,168,0.06)] transition-all duration-200"
               />
             </div>
 

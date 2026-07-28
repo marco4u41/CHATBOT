@@ -1,4 +1,5 @@
 import re
+import unicodedata
 from dataclasses import dataclass, field
 
 from app.domain.agent.intent import Intent
@@ -98,16 +99,23 @@ _INTENT_SIGNALS: list[IntentSignal] = [
             "warning",
         ],
         patterns=[
-            r"tengo\s+(un|una)\s+(problema|falla|ruido|olor|fuga|vibración)",
-            r"mi\s+(auto|carro|vehículo|coche|moto)\s+(tiene|hace|presenta)",
-            r"(está|esta)\s+(calentando|humo|vibrando|ruidoso|fallando)",
+            r"tengo\s+(un|una)\s+(problema|falla|ruido|olor|fuga|vibracion)",
+            r"mi\s+(auto|carro|vehiculo|coche|moto)\s+(tiene|hace|presenta)",
+            r"(esta|esta)\s+(calentando|humo|vibrando|ruidoso|fallando)",
             r"(no|no\s+)(arranca|enciende|frena|funciona|prende)",
             r"se\s+(enciende|apaga|calienta|vibra)\s+(el|la)\s+(testigo|luz)",
-            r"(qué|que)\s+(puede\s+ser|pasa|le\s+pasa|tengo)",
-            r"necesito\s+(un\s+)?(diagnóstico|mecánico|taller)",
-            r"(ayuda|socorro|emergencia|urgente).*(auto|carro|vehículo|motor|freno)",
+            r"(que|que)\s+(puede\s+ser|pasa|le\s+pasa|tengo)",
+            r"necesito\s+(un\s+)?(diagnostico|mecanico|taller)",
+            r"(ayuda|socorro|emergencia|urgente).*(auto|carro|vehiculo|motor|freno)",
             r"check\s*engine",
-            r"luz\s+de\s+(check|motor|temperatura|aceite|batería)",
+            r"luz\s+de\s+(check|motor|temperatura|aceite|bateria)",
+            r"\bhace\s+(un|el)\s+(ruido|ruidos|olores?)\b",
+            r"\bvibra\b",
+            r"\bse\s+apaga\b",
+            r"\bse\s+calienta\b",
+            r"\bno\s+arranca\b",
+            r"\bno\s+frena\b",
+            r"\bse\s+enciende\b",
         ],
         weight=1.2,
     ),
@@ -186,6 +194,129 @@ _GENERAL_NEGATIVE_SIGNALS = [
     r"^(ok|vale|de\s+acuerdo|entendido|perfecto|genial|bien)\s*[!.]?\s*$",
 ]
 
+def _strip_accents(text: str) -> str:
+    nfkd = unicodedata.normalize("NFKD", text)
+    return "".join(c for c in nfkd if not unicodedata.combining(c))
+
+
+_AUTOMOTIVE_DOMAIN_KEYWORDS: set[str] = {
+    _strip_accents(kw) for kw in {
+        "auto", "autos", "carro", "carros", "vehiculo", "vehiculos",
+        "coche", "coches", "camioneta", "camionetas", "motocicleta",
+        "moto", "motos", "furgoneta", "rueda", "ruedas",
+        "toyota", "honda", "ford", "chevrolet", "chevy", "nissan",
+        "mazda", "hyundai", "kia", "suzuki", "subaru", "mitsubishi",
+        "audi", "bmw", "mercedes", "benz", "volkswagen", "vw",
+        "lexus", "acura", "infiniti", "porsche", "ferrari",
+        "fiat", "peugeot", "renault", "opel", "volvo", "seat",
+        "skoda", "dacia", "geely", "changan", "byd",
+        "great wall", "foton", "jac",
+        "mecanica", "mecanico", "mecanicos",
+        "motor", "motores", "carroceria",
+        "transmision", "caja", "embrague",
+        "suspension", "amortiguador", "amortiguadores",
+        "freno", "frenos", "pastillas", "discos",
+        "direccion", "volante",
+        "bateria", "alternador", "arranque",
+        "radiador", "termostato", "bombas",
+        "filtro", "filtros", "aceite",
+        "llantas", "llanta", "neumaticos", "gomas",
+        "clutch", "diferencial", "eje",
+        "escape", "tubo", "catalizador", "mofle",
+        "combustible", "gasolina", "diesel", "electrico",
+        "hibrido", "etanol", "gnv", "glp",
+        "gas natural", "lng",
+        "sedan", "suv", "hatchback", "coupe",
+        "pickup", "familiar", "wagon", "van", "crossover",
+        "berlina", "deportivo",
+        "fwd", "rwd", "awd", "4x4", "traccion",
+        "odometro", "millaje",
+        "kilometros", "km", "millas",
+        "concesionario", "concesionaria", "agencia",
+        "seminuevo", "semiusado", "usado", "nuevo",
+        "test drive", "prueba de manejo",
+        "seguro", "seguros", "poliza",
+        "financiamiento", "credito", "cuota", "leasing",
+        "avaluo", "tasacion",
+        "revisiones", "mantenimiento", "service", "servicio",
+        "afinamiento", "cambio de aceite", "alineacion",
+        "balanceo", "rotacion de llantas",
+        "scanner", "escaner", "diagnostico automotriz", "diagnosticar",
+        "ecu", "obd", "obd2", "codigo de falla",
+        "check engine", "testigo", "luz de advertencia",
+        "carpass", "carfax", "historial", "title",
+        "gps", "tracker", "rastreador vehicular",
+        "luces", "faros", "headlight", "led",
+        "aire acondicionado", "a/c", "clima",
+        "airbag", "cinturon", "seguridad",
+        "isofix", "abs", "control de estabilidad",
+        "sensor", "sensores", "camara",
+        "pantalla", "infotainment", "apple carplay", "android auto",
+        "autonomia", "rango",
+        "emisiones", "contaminacion",
+        "inspeccion", "vistabueno",
+        "matricula", "placa", "placas",
+        "transito", "multa", "multas",
+        "valla", "grua", "remolque",
+        "carga", "tonelada", "payload",
+        "off road", "off-road", "todo terreno", "4wd",
+        "trailer", "semi", "camion",
+        "vehiculo electrico", "ev", "bev", "phev",
+        "recarga", "carga rapida", "supercharger",
+        "mecanica automotriz", "ingenieria automotriz",
+    }
+}
+
+_OUT_OF_SCOPE_PATTERNS: list[str] = [
+    r"(receta|pastel|cocinar|cocina|comida|comer|ingrediente|cocino|hornear|bizcocho|tarta)",
+    r"descubri",
+    r"historia\s+de\s+(america|colon)",
+    r"historia\s+universal",
+    r"colon\s+descubri",
+    r"invento\b",
+    r"(contenedor(?:es)?\s+(?:docker|virtual)|kubernetes|k8s)",
+    r"(como\s+funciona|que\s+es)\s+docker\b",
+    r"(programacion|programar|python|javascript|css|html)",
+    r"(enfermedad|sintomas?\s+(de\s+)?(gripe|humano|resfriado)|medicamento|medicina|doctor|dolor\s+de\s+cabeza|fiebre)",
+    r"(clima\s+(del|de)\s+(hoy|dia)|tiempo\s+meteorologico|pronostico|clima\s+de)",
+    r"(recetas?\s+de\s+cocina|ideas?\s+de\s+cena)",
+    r"(poema|poesia|verso|cancion|cantar|musica)",
+    r"(traduce|traducir|idioma|lengua)",
+    r"(tarea|deberes?|matematicas|examen|estudiar)",
+    r"(mecanica\s+cuantica|fisica|astrologia|astronomia)",
+    r"(planeta|planetas|sistema\s+solar|universo|estrella|galaxia)",
+    r"(chiste|broma|humor|reir)",
+    r"(asistente\s+general|responde\s+lo\s+que|cualquier\s+pregunta|actua\s+como|ignora\s+tus)",
+]
+
+
+def _is_in_automotive_domain(normalized: str) -> bool:
+    """Return True if the message contains automotive domain keywords."""
+    return any(kw in normalized for kw in _AUTOMOTIVE_DOMAIN_KEYWORDS)
+
+
+def _is_out_of_scope(normalized: str) -> bool:
+    """Return True if the message clearly falls outside the automotive domain.
+
+    Checks out-of-scope patterns first (to catch compound words like
+    'mecanica cuantica' that contain automotive keywords). Then checks
+    if the message contains any automotive domain keywords.
+
+    Docker is only flagged when there is NO automotive context nearby.
+    """
+    for p in _OUT_OF_SCOPE_PATTERNS:
+        if re.search(p, normalized, re.IGNORECASE):
+            return True
+
+    if re.search(r"\bdocker\b", normalized):
+        if not _is_in_automotive_domain(normalized):
+            return True
+
+    if _is_in_automotive_domain(normalized):
+        return False
+    return False
+    return False
+
 
 @dataclass
 class ClassificationResult:
@@ -209,6 +340,9 @@ class IntentClassifier:
 
         if self._is_greeting_or_farewell(normalized):
             return ClassificationResult(intent=Intent.GENERAL, confidence=1.0)
+
+        if _is_out_of_scope(normalized):
+            return ClassificationResult(intent=Intent.OUT_OF_SCOPE, confidence=1.0)
 
         scores: dict[Intent, float] = {}
         matched: dict[Intent, list[str]] = {}
@@ -252,7 +386,8 @@ class IntentClassifier:
 
     @staticmethod
     def _normalize(text: str) -> str:
-        return text.lower().strip()
+        nfkd = unicodedata.normalize("NFKD", text)
+        return "".join(c for c in nfkd if not unicodedata.combining(c)).lower().strip()
 
     @staticmethod
     def _is_greeting_or_farewell(text: str) -> bool:

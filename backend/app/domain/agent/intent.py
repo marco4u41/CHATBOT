@@ -6,3 +6,4 @@ class Intent(StrEnum):
     COMPARISON = "comparison"
     DIAGNOSIS = "diagnosis"
     RECOMMENDATION = "recommendation"
+    OUT_OF_SCOPE = "out_of_scope"

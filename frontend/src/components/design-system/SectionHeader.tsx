@@ -25,7 +25,7 @@ export function SectionHeader({
     >
       <div className="flex items-center gap-3">
         {icon && (
-          <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-ax-surface-light border border-white/[0.06]">
+          <div className="flex items-center justify-center w-9 h-9 rounded-ax-sm bg-ax-surface-light border border-white/[0.06]">
             {icon}
           </div>
         )}

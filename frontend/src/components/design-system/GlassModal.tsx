@@ -1,18 +1,39 @@
-import { useEffect, useCallback, useRef, type ReactNode } from "react";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
+import { forwardRef } from "react";
+import { X } from "lucide-react";
 import { cn } from "@/utils/cn";
 
-interface GlassModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  title?: string;
-  children: ReactNode;
-  footer?: ReactNode;
-  size?: "sm" | "md" | "lg" | "xl" | "2xl" | "full";
-  className?: string;
-  description?: string;
+const GlassModal = DialogPrimitive.Root;
+const GlassModalTrigger = DialogPrimitive.Trigger;
+const GlassModalClose = DialogPrimitive.Close;
+const GlassModalPortal = DialogPrimitive.Portal;
+
+const GlassModalOverlay = forwardRef<
+  React.ComponentRef<typeof DialogPrimitive.Overlay>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
+>(({ className, ...props }, ref) => (
+  <DialogPrimitive.Overlay
+    ref={ref}
+    className={cn(
+      "fixed inset-0 z-50",
+      "bg-black/60 backdrop-blur-sm",
+      "data-[state=open]:animate-ax-fade-in",
+      "data-[state=closed]:animate-ax-fade-in",
+      className,
+    )}
+    {...props}
+  />
+));
+GlassModalOverlay.displayName = "GlassModalOverlay";
+
+type GlassModalContentSize = "sm" | "md" | "lg" | "xl" | "2xl" | "full";
+
+interface GlassModalContentProps
+  extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> {
+  size?: GlassModalContentSize;
 }
 
-const sizeClasses = {
+const sizeClasses: Record<GlassModalContentSize, string> = {
   sm: "max-w-sm",
   md: "max-w-md",
   lg: "max-w-lg",
@@ -21,102 +42,109 @@ const sizeClasses = {
   full: "w-[92vw] max-w-[1400px]",
 };
 
-export function GlassModal({
-  isOpen,
-  onClose,
-  title,
-  children,
-  footer,
-  size = "md",
-  className,
-  description,
-}: GlassModalProps) {
-  const overlayRef = useRef<HTMLDivElement>(null);
-  const dialogRef = useRef<HTMLDivElement>(null);
-
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    },
-    [onClose],
-  );
-
-  useEffect(() => {
-    if (isOpen) {
-      document.addEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = "hidden";
-    }
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = "";
-    };
-  }, [isOpen, handleKeyDown]);
-
-  if (!isOpen) return null;
-
-  return (
-    <div
-      ref={overlayRef}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-ax-fade-in"
-      onClick={(e) => {
-        if (e.target === overlayRef.current) onClose();
-      }}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby={title ? "modal-title" : undefined}
-      aria-describedby={description ? "modal-description" : undefined}
+const GlassModalContent = forwardRef<
+  React.ComponentRef<typeof DialogPrimitive.Content>,
+  GlassModalContentProps
+>(({ className, children, size = "md", ...props }, ref) => (
+  <GlassModalPortal>
+    <GlassModalOverlay />
+    <DialogPrimitive.Content
+      ref={ref}
+      className={cn(
+        "fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2",
+        "ax-glass rounded-ax-lg border border-white/[0.08]",
+        "shadow-ax-modal w-full",
+        "data-[state=open]:animate-ax-scale-in",
+        "focus:outline-none",
+        sizeClasses[size],
+        className,
+      )}
+      {...props}
     >
-      <div
-        ref={dialogRef}
-        className={cn(
-          "ax-glass rounded-2xl border border-white/[0.08]",
-          "shadow-ax-modal w-full",
-          "animate-ax-scale-in",
-          sizeClasses[size],
-          className,
-        )}
-      >
-        {title && (
-          <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.04]">
-            <div>
-              <h2
-                id="modal-title"
-                className="ax-text-heading text-base text-ax-text-primary"
-              >
-                {title}
-              </h2>
-              {description && (
-                <p id="modal-description" className="text-xs text-ax-text-muted mt-0.5">
-                  {description}
-                </p>
-              )}
-            </div>
-            <button
-              onClick={onClose}
-              className="text-ax-text-muted hover:text-ax-text-primary transition-colors p-1 rounded-lg hover:bg-white/[0.04]"
-              aria-label="Cerrar"
-            >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              >
-                <path d="M4 4l8 8M12 4l-8 8" />
-              </svg>
-            </button>
-          </div>
-        )}
-        <div className="px-6 py-5 overflow-y-auto max-h-[75vh]">{children}</div>
-        {footer && (
-          <div className="px-6 py-4 border-t border-white/[0.04]">
-            {footer}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
+      {children}
+      <DialogPrimitive.Close className="absolute right-4 top-4 text-ax-text-muted hover:text-ax-text-primary transition-colors p-1 rounded-ax-sm hover:bg-white/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ax-wine/30">
+        <X size={16} aria-hidden="true" />
+        <span className="sr-only">Cerrar</span>
+      </DialogPrimitive.Close>
+    </DialogPrimitive.Content>
+  </GlassModalPortal>
+));
+GlassModalContent.displayName = "GlassModalContent";
+
+const GlassModalHeader = ({
+  className,
+  children,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) => (
+  <div
+    className={cn(
+      "flex items-center justify-between px-6 py-4 border-b border-white/[0.04]",
+      className,
+    )}
+    {...props}
+  >
+    {children}
+  </div>
+);
+GlassModalHeader.displayName = "GlassModalHeader";
+
+const GlassModalTitle = forwardRef<
+  React.ComponentRef<typeof DialogPrimitive.Title>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
+>(({ className, ...props }, ref) => (
+  <DialogPrimitive.Title
+    ref={ref}
+    className={cn("ax-text-heading text-base text-ax-text-primary", className)}
+    {...props}
+  />
+));
+GlassModalTitle.displayName = "GlassModalTitle";
+
+const GlassModalDescription = forwardRef<
+  React.ComponentRef<typeof DialogPrimitive.Description>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
+>(({ className, ...props }, ref) => (
+  <DialogPrimitive.Description
+    ref={ref}
+    className={cn("text-xs text-ax-text-muted mt-0.5", className)}
+    {...props}
+  />
+));
+GlassModalDescription.displayName = "GlassModalDescription";
+
+const GlassModalBody = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) => (
+  <div
+    className={cn("px-6 py-5 overflow-y-auto max-h-[75vh]", className)}
+    {...props}
+  />
+);
+GlassModalBody.displayName = "GlassModalBody";
+
+const GlassModalFooter = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) => (
+  <div
+    className={cn(
+      "px-6 py-4 border-t border-white/[0.04]",
+      className,
+    )}
+    {...props}
+  />
+);
+GlassModalFooter.displayName = "GlassModalFooter";
+
+export {
+  GlassModal,
+  GlassModalTrigger,
+  GlassModalClose,
+  GlassModalContent,
+  GlassModalHeader,
+  GlassModalTitle,
+  GlassModalDescription,
+  GlassModalBody,
+  GlassModalFooter,
+};

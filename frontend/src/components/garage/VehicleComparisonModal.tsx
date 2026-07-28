@@ -1,5 +1,13 @@
 import { useMemo, useCallback, useEffect, useRef } from "react";
-import { GlassModal } from "@/components/design-system/GlassModal";
+import {
+  GlassModal,
+  GlassModalContent,
+  GlassModalHeader,
+  GlassModalTitle,
+  GlassModalDescription,
+  GlassModalBody,
+  GlassModalFooter,
+} from "@/components/design-system/GlassModal";
 import { GlassBadge } from "@/components/design-system/GlassBadge";
 import type { GarageVehicle } from "@/types/vehicle";
 import {
@@ -243,214 +251,222 @@ export function VehicleComparisonModal({
   if (vehicles.length < 2) return null;
 
   return (
-    <GlassModal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Comparación de vehículos"
-      description={`${vehicles.length} vehículos seleccionados para comparar`}
-      size="full"
-      className="w-[95vw] max-w-[1600px] sm:w-[90vw] lg:w-[88vw]"
-      footer={
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <button
-            onClick={handleClear}
-            className="text-xs text-ax-text-muted hover:text-ax-accent-danger transition-colors px-3 py-1.5 rounded-lg hover:bg-white/[0.04]"
-          >
-            Limpiar comparación
-          </button>
-          <button
-            onClick={onClose}
-            className="text-xs font-semibold text-ax-text-primary bg-ax-surface-light border border-white/[0.08] px-4 py-2 rounded-xl hover:bg-white/[0.06] transition-colors"
-          >
-            Cerrar
-          </button>
-        </div>
-      }
-    >
-      <div className="space-y-6">
-        {/* Vehicle headers with remove buttons */}
-        <div className="flex gap-3 overflow-x-auto pb-2">
-          {vehicles.map((vehicle) => (
-            <div
-              key={vehicle.id}
-              className="flex-shrink-0 min-w-[180px] flex-1 ax-glass--light rounded-xl p-4 border border-white/[0.06]"
-            >
-              <div className="flex items-start justify-between mb-2">
-                <div className="min-w-0">
-                  <p className="text-sm font-bold text-ax-text-primary truncate">
-                    {vehicle.brand} {vehicle.model}
-                  </p>
-                  <p className="text-xs text-ax-text-muted font-mono mt-0.5">
-                    {formatYear(vehicle.year)}
-                  </p>
-                </div>
-                <button
-                  onClick={() => handleRemove(vehicle.id)}
-                  className="text-ax-text-muted hover:text-ax-accent-danger transition-colors p-1 rounded-lg hover:bg-white/[0.06] shrink-0"
-                  aria-label={`Quitar ${vehicle.brand} ${vehicle.model} de la comparación`}
-                >
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              {vehicle.price_usd != null && (
-                <p className="text-sm font-semibold text-ax-accent-success">
-                  {formatPriceUSD(vehicle.price_usd)}
-                </p>
-              )}
-            </div>
-          ))}
-        </div>
-
-        {/* Comparison table */}
-        <div className="overflow-x-auto rounded-xl border border-white/[0.06]">
-          <table className="w-full text-sm" role="table" aria-label="Tabla de comparación de vehículos">
-            <thead>
-              <tr className="bg-white/[0.02]">
-                <th
-                  className="text-left py-3 px-4 text-xs font-semibold text-ax-text-muted uppercase tracking-wider border-b border-white/[0.06] w-[160px] sticky left-0 bg-ax-bg-deep/90"
-                  scope="col"
-                >
-                  Característica
-                </th>
-                {vehicles.map((v) => (
-                  <th
-                    key={v.id}
-                    className="text-left py-3 px-4 text-xs font-semibold text-ax-text-muted uppercase tracking-wider border-b border-white/[0.06]"
-                    scope="col"
-                  >
-                    {v.brand} {v.model}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {comparisonRows.map((row) => {
-                const bestIdx = row.highlight ? findBestValue(row.values, row.highlight) : null;
-                return (
-                  <tr
-                    key={row.key}
-                    className="border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors"
-                  >
-                    <td className="py-3 px-4 text-xs font-semibold text-ax-text-secondary whitespace-nowrap sticky left-0 bg-ax-bg-deep/90">
-                      {row.label}
-                    </td>
-                    {row.values.map((val, i) => {
-                      const isBest = bestIdx === i;
-                      const displayVal = safeDisplay(val);
-                      return (
-                        <td
-                          key={i}
-                          className="py-3 px-4 text-xs text-ax-text-primary"
-                        >
-                          <div className="flex items-center gap-2">
-                            <span>{displayVal}</span>
-                            {isBest && row.highlightLabel && (
-                              <GlassBadge variant="success" size="sm">
-                                {row.highlightLabel}
-                              </GlassBadge>
-                            )}
-                          </div>
-                        </td>
-                      );
-                    })}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Advantages / Disadvantages */}
-        <div className="space-y-3">
-          <h3 className="text-xs font-bold text-ax-text-muted uppercase tracking-wider">
-            Análisis por vehículo
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-            {vehicles.map((vehicle) => {
-              const adv = advantages.find((a) => a.vehicleId === vehicle.id);
-              return (
+    <GlassModal open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <GlassModalContent
+        size="full"
+        className="w-[95vw] max-w-[1600px] sm:w-[90vw] lg:w-[88vw]"
+      >
+        <GlassModalHeader>
+          <div>
+            <GlassModalTitle>Comparación de vehículos</GlassModalTitle>
+            <GlassModalDescription>
+              {vehicles.length} vehículos seleccionados para comparar
+            </GlassModalDescription>
+          </div>
+        </GlassModalHeader>
+        <GlassModalBody>
+          <div className="space-y-6">
+            {/* Vehicle headers with remove buttons */}
+            <div className="flex gap-3 overflow-x-auto pb-2">
+              {vehicles.map((vehicle) => (
                 <div
                   key={vehicle.id}
-                  className="ax-glass--light rounded-xl p-4 border border-white/[0.06]"
+                  className="flex-shrink-0 min-w-[180px] flex-1 ax-glass--light rounded-xl p-4 border border-white/[0.06]"
                 >
-                  <p className="text-sm font-bold text-ax-text-primary mb-2">
-                    {vehicle.brand} {vehicle.model}
-                  </p>
-                  <div className="space-y-1.5">
-                    <div className="flex items-start gap-2">
-                      <GlassBadge variant="success" size="sm">
-                        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                        </svg>
-                      </GlassBadge>
-                      <span className="text-xs text-ax-text-secondary">
-                        {adv?.advantage ?? "Sin ventaja destacada"}
-                      </span>
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-ax-text-primary truncate">
+                        {vehicle.brand} {vehicle.model}
+                      </p>
+                      <p className="text-xs text-ax-text-muted font-mono mt-0.5">
+                        {formatYear(vehicle.year)}
+                      </p>
                     </div>
-                    <div className="flex items-start gap-2">
-                      <GlassBadge variant="warning" size="sm">
-                        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
-                        </svg>
-                      </GlassBadge>
-                      <span className="text-xs text-ax-text-secondary">
-                        {adv?.disadvantage ?? "Sin desventaja destacada"}
-                      </span>
+                    <button
+                      onClick={() => handleRemove(vehicle.id)}
+                      className="text-ax-text-muted hover:text-ax-accent-danger transition-colors p-1 rounded-lg hover:bg-white/[0.06] shrink-0"
+                      aria-label={`Quitar ${vehicle.brand} ${vehicle.model} de la comparación`}
+                    >
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                  {vehicle.price_usd != null && (
+                    <p className="text-sm font-semibold text-ax-accent-success">
+                      {formatPriceUSD(vehicle.price_usd)}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Comparison table */}
+            <div className="overflow-x-auto rounded-xl border border-white/[0.06]">
+              <table className="w-full text-sm" role="table" aria-label="Tabla de comparación de vehículos">
+                <thead>
+                  <tr className="bg-white/[0.02]">
+                    <th
+                      className="text-left py-3 px-4 text-xs font-semibold text-ax-text-muted uppercase tracking-wider border-b border-white/[0.06] w-[160px] sticky left-0 bg-ax-bg-deep/90"
+                      scope="col"
+                    >
+                      Característica
+                    </th>
+                    {vehicles.map((v) => (
+                      <th
+                        key={v.id}
+                        className="text-left py-3 px-4 text-xs font-semibold text-ax-text-muted uppercase tracking-wider border-b border-white/[0.06]"
+                        scope="col"
+                      >
+                        {v.brand} {v.model}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {comparisonRows.map((row) => {
+                    const bestIdx = row.highlight ? findBestValue(row.values, row.highlight) : null;
+                    return (
+                      <tr
+                        key={row.key}
+                        className="border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors"
+                      >
+                        <td className="py-3 px-4 text-xs font-semibold text-ax-text-secondary whitespace-nowrap sticky left-0 bg-ax-bg-deep/90">
+                          {row.label}
+                        </td>
+                        {row.values.map((val, i) => {
+                          const isBest = bestIdx === i;
+                          const displayVal = safeDisplay(val);
+                          return (
+                            <td
+                              key={i}
+                              className="py-3 px-4 text-xs text-ax-text-primary"
+                            >
+                              <div className="flex items-center gap-2">
+                                <span>{displayVal}</span>
+                                {isBest && row.highlightLabel && (
+                                  <GlassBadge variant="success" size="sm">
+                                    {row.highlightLabel}
+                                  </GlassBadge>
+                                )}
+                              </div>
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Advantages / Disadvantages */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-bold text-ax-text-muted uppercase tracking-wider">
+                Análisis por vehículo
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                {vehicles.map((vehicle) => {
+                  const adv = advantages.find((a) => a.vehicleId === vehicle.id);
+                  return (
+                    <div
+                      key={vehicle.id}
+                      className="ax-glass--light rounded-xl p-4 border border-white/[0.06]"
+                    >
+                      <p className="text-sm font-bold text-ax-text-primary mb-2">
+                        {vehicle.brand} {vehicle.model}
+                      </p>
+                      <div className="space-y-1.5">
+                        <div className="flex items-start gap-2">
+                          <GlassBadge variant="success" size="sm">
+                            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                            </svg>
+                          </GlassBadge>
+                          <span className="text-xs text-ax-text-secondary">
+                            {adv?.advantage ?? "Sin ventaja destacada"}
+                          </span>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <GlassBadge variant="warning" size="sm">
+                            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+                            </svg>
+                          </GlassBadge>
+                          <span className="text-xs text-ax-text-secondary">
+                            {adv?.disadvantage ?? "Sin desventaja destacada"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* General model context */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-bold text-ax-text-muted uppercase tracking-wider">
+                Análisis cualitativo
+              </h3>
+              {getSpecificDifferences(vehicles) && (
+                <p className="text-xs text-ax-text-secondary leading-relaxed">
+                  {getSpecificDifferences(vehicles)}
+                </p>
+              )}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                {vehicles.map((vehicle) => (
+                  <div
+                    key={vehicle.id}
+                    className="ax-glass--light rounded-xl p-4 border border-white/[0.06]"
+                  >
+                    <p className="text-sm font-bold text-ax-text-primary mb-2">
+                      {vehicle.brand} {vehicle.model}
+                    </p>
+                    <div className="space-y-1.5 text-xs text-ax-text-secondary">
+                      <p>
+                        <span className="text-ax-text-muted">Para qué conviene: </span>
+                        {getUsageRecommendation(vehicle)}
+                      </p>
+                      <p>
+                        <span className="text-ax-text-muted">Confort: </span>
+                        {getComfortAssessment(vehicle)}
+                      </p>
+                      <p>
+                        <span className="text-ax-text-muted">Desempeño: </span>
+                        {getPerformanceAssessment(vehicle)}
+                      </p>
+                      <p>
+                        <span className="text-ax-text-muted">Confiabilidad: </span>
+                        {getReliabilityAssessment(vehicle)}
+                      </p>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* General model context */}
-        <div className="space-y-3">
-          <h3 className="text-xs font-bold text-ax-text-muted uppercase tracking-wider">
-            Análisis cualitativo
-          </h3>
-          {getSpecificDifferences(vehicles) && (
-            <p className="text-xs text-ax-text-secondary leading-relaxed">
-              {getSpecificDifferences(vehicles)}
-            </p>
-          )}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-            {vehicles.map((vehicle) => (
-              <div
-                key={vehicle.id}
-                className="ax-glass--light rounded-xl p-4 border border-white/[0.06]"
-              >
-                <p className="text-sm font-bold text-ax-text-primary mb-2">
-                  {vehicle.brand} {vehicle.model}
-                </p>
-                <div className="space-y-1.5 text-xs text-ax-text-secondary">
-                  <p>
-                    <span className="text-ax-text-muted">Para qué conviene: </span>
-                    {getUsageRecommendation(vehicle)}
-                  </p>
-                  <p>
-                    <span className="text-ax-text-muted">Confort: </span>
-                    {getComfortAssessment(vehicle)}
-                  </p>
-                  <p>
-                    <span className="text-ax-text-muted">Desempeño: </span>
-                    {getPerformanceAssessment(vehicle)}
-                  </p>
-                  <p>
-                    <span className="text-ax-text-muted">Confiabilidad: </span>
-                    {getReliabilityAssessment(vehicle)}
-                  </p>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
 
-        {/* Final recommendation */}
-        <RecommendationSummary vehicles={vehicles} />
-      </div>
+            {/* Final recommendation */}
+            <RecommendationSummary vehicles={vehicles} />
+          </div>
+        </GlassModalBody>
+        <GlassModalFooter>
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <button
+              onClick={handleClear}
+              className="text-xs text-ax-text-muted hover:text-ax-accent-danger transition-colors px-3 py-1.5 rounded-lg hover:bg-white/[0.04]"
+            >
+              Limpiar comparación
+            </button>
+            <button
+              onClick={onClose}
+              className="text-xs font-semibold text-ax-text-primary bg-ax-surface-light border border-white/[0.08] px-4 py-2 rounded-xl hover:bg-white/[0.06] transition-colors"
+            >
+              Cerrar
+            </button>
+          </div>
+        </GlassModalFooter>
+      </GlassModalContent>
     </GlassModal>
   );
 }
@@ -612,7 +628,7 @@ function RecommendationSummary({
 
   return (
     <div className="ax-glass--light rounded-xl p-5 border border-white/[0.06]">
-      <h3 className="text-xs font-bold text-ax-accent-warning uppercase tracking-wider mb-3">
+      <h3 className="text-xs font-bold text-ax-gold uppercase tracking-wider mb-3">
         Recomendación comparativa
       </h3>
       <div className="space-y-3">

@@ -13,6 +13,7 @@ export function MessageInput({
   onSend,
 }: MessageInputProps) {
   const [value, setValue] = useState("");
+  const [isFocused, setIsFocused] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const charCount = value.length;
@@ -40,66 +41,81 @@ export function MessageInput({
   }
 
   return (
-    <div className="flex-shrink-0 border-t border-white/[0.06] ax-glass p-4">
-      <div className="max-w-3xl mx-auto">
-        <div className="relative">
-          <textarea
-            ref={textareaRef}
-            id="chat-message"
-            name="message"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={disabled}
-            placeholder="Escribe tu mensaje..."
-            rows={1}
-            className={cn(
-              "w-full resize-none rounded-xl px-4 py-3 pr-12 text-sm",
-              "bg-ax-bg-deep/90 text-ax-text-primary placeholder:text-ax-text-subtle",
-              "border border-white/[0.08] shadow-ax-inset",
-              "disabled:opacity-40 disabled:cursor-not-allowed",
-              "transition-all duration-200",
-              "focus:outline-none focus:border-ax-accent-primary/25 focus:shadow-[0_0_0_3px_rgba(111,38,64,0.06)]",
-              isOverLimit && "border-ax-accent-danger/50",
-            )}
-            aria-label="Mensaje del chat"
-            aria-describedby="char-count"
-          />
-          <button
-            onClick={handleSubmit}
-            disabled={disabled || !value.trim() || isOverLimit}
-            className={cn(
-              "absolute right-3 bottom-3 p-2 rounded-xl transition-all duration-200",
-              value.trim() && !disabled && !isOverLimit
-                ? "bg-gradient-to-br from-ax-gold/15 to-ax-gold/5 text-ax-gold border border-ax-gold/20 shadow-ax-glow-gold hover:from-ax-gold/25 hover:to-ax-gold/10 active:scale-[0.95]"
-                : "bg-ax-surface text-ax-text-subtle cursor-not-allowed border border-white/[0.06]",
-            )}
-            aria-label="Enviar mensaje"
-          >
-            <svg
-              className="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
+    <div className="flex-shrink-0 px-4 sm:px-6 pb-4 pt-2">
+      <div className="max-w-[680px] mx-auto">
+        {/* Floating Input Capsule */}
+        <div
+          className={cn(
+            "ax-input-glass rounded-[20px] transition-all duration-300",
+            isFocused && "border-ax-accent-info/25 shadow-[0_-2px_24px_rgba(0,0,0,0.35),0_4px_16px_rgba(0,0,0,0.25),0_0_0_1px_rgba(79,127,168,0.12)]",
+            isOverLimit && "border-ax-accent-danger/40",
+          )}
+        >
+          <div className="relative flex items-end">
+            <textarea
+              ref={textareaRef}
+              id="chat-message"
+              name="message"
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              onKeyDown={handleKeyDown}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+              disabled={disabled}
+              placeholder="Escribe tu mensaje..."
+              rows={1}
+              className={cn(
+                "w-full resize-none rounded-[20px] px-5 py-4 pr-14 text-sm",
+                "bg-transparent text-platinum placeholder:text-ax-text-subtle",
+                "border-none shadow-none",
+                "disabled:opacity-40 disabled:cursor-not-allowed",
+                "transition-colors duration-200",
+                "focus:outline-none",
+                "font-ax-sans",
+              )}
+              aria-label="Mensaje del chat"
+              aria-describedby="char-count"
+            />
+
+            {/* Send Button */}
+            <button
+              onClick={handleSubmit}
+              disabled={disabled || !value.trim() || isOverLimit}
+              className={cn(
+                "absolute right-3 bottom-3 p-2.5 rounded-2xl transition-all duration-200",
+                value.trim() && !disabled && !isOverLimit
+                  ? "bg-gradient-to-br from-ax-wine to-ax-wine-light/90 text-white shadow-ax-glow-wine hover:from-ax-wine-light hover:to-ax-wine hover:shadow-[0_0_20px_rgba(125,41,72,0.25)] active:scale-[0.93]"
+                  : "bg-white/[0.04] text-ax-text-subtle cursor-not-allowed border border-white/[0.06]",
+              )}
+              aria-label="Enviar mensaje"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5"
-              />
-            </svg>
-          </button>
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5"
+                />
+              </svg>
+            </button>
+          </div>
         </div>
+
+        {/* Character count */}
         <p
           id="char-count"
           className={cn(
-            "mt-1.5 text-[10px] text-right font-ax-mono",
+            "mt-2 text-[10px] text-right font-ax-mono transition-colors",
             isOverLimit
               ? "text-ax-accent-danger"
               : isNearLimit
                 ? "text-ax-accent-warning"
-                : "text-ax-text-muted",
+                : "text-ax-text-subtle",
           )}
         >
           {charCount}/{maxLength}

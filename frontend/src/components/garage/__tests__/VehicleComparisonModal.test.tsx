@@ -210,7 +210,8 @@ describe("VehicleComparisonModal", () => {
   it("has accessible dialog attributes", () => {
     renderModal();
     const dialog = screen.getByRole("dialog");
-    expect(dialog).toHaveAttribute("aria-modal", "true");
+    expect(dialog).toBeInTheDocument();
+    expect(dialog).toHaveAttribute("aria-labelledby");
   });
 
   it("translates transmission values to Spanish", () => {

@@ -23,26 +23,26 @@ const variantClasses: Record<BadgeVariant, string> = {
   default:
     "bg-white/[0.06] text-ax-text-secondary border border-white/[0.08]",
   primary:
-    "bg-ax-accent-primary/[0.1] text-ax-accent-primary/90 border border-ax-accent-primary/20",
+    "bg-ax-wine/[0.10] text-ax-wine-light border border-ax-wine/20",
   success:
-    "bg-ax-accent-success/[0.1] text-ax-accent-success border border-ax-accent-success/20",
+    "bg-ax-accent-success/[0.10] text-ax-accent-success border border-ax-accent-success/20",
   warning:
-    "bg-ax-accent-warning/[0.1] text-ax-accent-warning border border-ax-accent-warning/20",
+    "bg-ax-gold/[0.10] text-ax-gold border border-ax-gold/20",
   danger:
     "bg-ax-accent-danger/[0.15] text-red-400 border border-ax-accent-danger/25",
   info:
-    "bg-ax-accent-info/[0.1] text-ax-accent-info border border-ax-accent-info/20",
+    "bg-ax-steel/[0.10] text-ax-steel-light border border-ax-steel/20",
   gold:
     "bg-ax-gold/[0.12] text-ax-gold-light border border-ax-gold/20",
 };
 
 const dotColors: Record<BadgeVariant, string> = {
   default: "bg-ax-text-muted",
-  primary: "bg-ax-accent-primary",
+  primary: "bg-ax-wine",
   success: "bg-ax-accent-success",
-  warning: "bg-ax-accent-warning",
+  warning: "bg-ax-gold",
   danger: "bg-ax-accent-danger",
-  info: "bg-ax-accent-info",
+  info: "bg-ax-steel",
   gold: "bg-ax-gold",
 };
 

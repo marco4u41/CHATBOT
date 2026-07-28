@@ -183,7 +183,7 @@ class AgentOrchestrator:
         if self._automotive_tool is None:
             return ""
 
-        if intent == Intent.GENERAL:
+        if intent in (Intent.GENERAL, Intent.OUT_OF_SCOPE):
             return ""
 
         try:

@@ -1,4 +1,5 @@
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from "react";
+import { Slot } from "@radix-ui/react-slot";
 import { cn } from "@/utils/cn";
 
 type ButtonVariant =
@@ -8,11 +9,12 @@ type ButtonVariant =
   | "danger"
   | "outline"
   | "premium";
-type ButtonSize = "sm" | "md" | "lg";
+type ButtonSize = "xs" | "sm" | "md" | "lg";
 
 interface GlassButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   size?: ButtonSize;
+  asChild?: boolean;
   isLoading?: boolean;
   leftIcon?: ReactNode;
   rightIcon?: ReactNode;
@@ -20,11 +22,11 @@ interface GlassButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary: cn(
-    "bg-gradient-to-br from-ax-accent-primary to-ax-accent-primary/80",
+    "bg-gradient-to-br from-ax-wine to-ax-wine/80",
     "text-white font-semibold",
-    "border border-ax-accent-primary/30",
+    "border border-ax-wine/30",
     "shadow-ax-glow-wine",
-    "hover:brightness-110 hover:shadow-[0_0_24px_rgba(111,38,64,0.25)]",
+    "hover:brightness-110 hover:shadow-[0_0_24px_rgba(139,49,82,0.25)]",
     "active:scale-[0.97]",
   ),
   secondary: cn(
@@ -46,9 +48,9 @@ const variantClasses: Record<ButtonVariant, string> = {
     "active:scale-[0.97]",
   ),
   outline: cn(
-    "bg-transparent text-ax-accent-primary",
-    "border border-ax-accent-primary/30",
-    "hover:bg-ax-accent-primary/[0.06] hover:border-ax-accent-primary/50",
+    "bg-transparent text-ax-wine-light",
+    "border border-ax-wine/30",
+    "hover:bg-ax-wine/[0.06] hover:border-ax-wine/50",
     "active:scale-[0.97]",
   ),
   premium: cn(
@@ -62,9 +64,10 @@ const variantClasses: Record<ButtonVariant, string> = {
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
-  sm: "px-3 py-1.5 text-xs rounded-lg gap-1.5",
-  md: "px-4 py-2 text-sm rounded-lg gap-2",
-  lg: "px-6 py-2.5 text-sm rounded-xl gap-2",
+  xs: "px-2.5 py-1 text-[11px] rounded-ax-sm gap-1",
+  sm: "px-3 py-1.5 text-xs rounded-ax-sm gap-1.5",
+  md: "px-4 py-2 text-sm rounded-ax-md gap-2",
+  lg: "px-6 py-2.5 text-sm rounded-ax-lg gap-2",
 };
 
 export const GlassButton = forwardRef<HTMLButtonElement, GlassButtonProps>(
@@ -72,6 +75,7 @@ export const GlassButton = forwardRef<HTMLButtonElement, GlassButtonProps>(
     {
       variant = "primary",
       size = "md",
+      asChild = false,
       isLoading = false,
       leftIcon,
       rightIcon,
@@ -82,14 +86,35 @@ export const GlassButton = forwardRef<HTMLButtonElement, GlassButtonProps>(
     },
     ref,
   ) => {
+    const isDisabled = disabled || isLoading;
+
+    if (asChild) {
+      return (
+        <Slot
+          className={cn(
+            "inline-flex items-center justify-center font-ax-sans",
+            "transition-all duration-200 ease-out",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ax-wine/30 focus-visible:ring-offset-2 focus-visible:ring-offset-ax-bg-deep",
+            "disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none",
+            variantClasses[variant],
+            sizeClasses[size],
+            className,
+          )}
+          {...props}
+        >
+          {children}
+        </Slot>
+      );
+    }
+
     return (
       <button
         ref={ref}
-        disabled={disabled || isLoading}
+        disabled={isDisabled}
         className={cn(
           "inline-flex items-center justify-center font-ax-sans",
           "transition-all duration-200 ease-out",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ax-accent-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-ax-bg-deep",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ax-wine/30 focus-visible:ring-offset-2 focus-visible:ring-offset-ax-bg-deep",
           "disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none",
           variantClasses[variant],
           sizeClasses[size],
@@ -105,19 +130,8 @@ export const GlassButton = forwardRef<HTMLButtonElement, GlassButtonProps>(
             viewBox="0 0 24 24"
             aria-hidden="true"
           >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            />
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-            />
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>
         ) : (
           leftIcon
