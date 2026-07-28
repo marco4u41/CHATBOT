@@ -62,7 +62,7 @@ Construir un asistente automotriz conversacional *production-ready* que demuestr
 │  └──────────────────────────┬────────────────────────────────┘  │
 │                             │                                    │
 │                             ▼                                    │
-│  ┌──────────────────────────────────────────────────────────┐  │
+│  ┌──────────────────────────────────────────────────────────┐    │
 │  │           POSTGRESQL (vehicles_master, brands,            │  │
 │  │            vehicle_market_stats, users, conversations)    │  │
 │  └──────────────────────────────────────────────────────────┘  │
