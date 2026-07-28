@@ -46,7 +46,7 @@ Construir un asistente automotriz conversacional *production-ready* que demuestr
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                        AGENT ORCHESTRATOR                        │
+│                        AGENT ORCHESTRATOR                       │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐  │
 │  │ Intent       │  │ Context      │  │ Capability Registry  │  │
 │  │ Classifier   │  │ Manager      │  │ (Recommendation,     │  │
