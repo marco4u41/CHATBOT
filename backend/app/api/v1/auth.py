@@ -3,29 +3,29 @@
 from __future__ import annotations
 
 import logging
+import secrets
 from datetime import UTC, datetime
 
-from fastapi import APIRouter, Depends, Response, Request, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.schemas.auth import (
+    AuthResponse,
+    ChangePasswordRequest,
+    LoginRequest,
+    RegisterRequest,
+    UserResponse,
+)
 from app.auth import (
     create_access_token,
     decode_access_token,
     hash_password,
     verify_password,
 )
-from app.api.schemas.auth import (
-    AuthResponse,
-    LoginRequest,
-    RegisterRequest,
-    UserResponse,
-)
 from app.config import settings
 from app.domain.models.user import User
 from app.infrastructure.database.connection import get_async_session
 from app.infrastructure.database.repositories.user_repo import SQLAlchemyUserRepository
-
-import secrets
 
 logger = logging.getLogger(__name__)
 
@@ -118,7 +118,10 @@ async def register(
     # Check if email already exists
     existing = await repo.get_by_email(email)
     if existing:
-        return AuthResponse(success=False, error="Ya existe una cuenta con este correo electrónico")
+        return AuthResponse(
+            success=False,
+            error="Ya existe una cuenta con este correo electrónico",
+        )
 
     # Create user
     user_id = secrets.token_hex(16)
@@ -163,7 +166,10 @@ async def login(
         return AuthResponse(success=False, error="Correo electrónico o contraseña incorrectos")
 
     if not user.is_active:
-        return AuthResponse(success=False, error="Tu cuenta está desactivada. Contacta al administrador.")
+        return AuthResponse(
+            success=False,
+            error="Tu cuenta está desactivada. Contacta al administrador.",
+        )
 
     # Set session cookie
     token = create_access_token(user.id, user.email)
@@ -190,3 +196,29 @@ async def logout(response: Response):
 async def get_me(user: User = Depends(get_current_user)):
     """Get the currently authenticated user."""
     return AuthResponse(success=True, user=_user_response(user))
+
+
+@router.post("/change-password")
+async def change_password(
+    request: ChangePasswordRequest,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_async_session),
+):
+    """Change the current user's password."""
+    repo = SQLAlchemyUserRepository(session)
+
+    if not verify_password(request.current_password, user.password_hash):
+        return AuthResponse(success=False, error="La contraseña actual es incorrecta")
+
+    if request.current_password == request.new_password:
+        return AuthResponse(
+            success=False,
+            error="La nueva contraseña debe ser diferente a la actual",
+        )
+
+    new_hash = hash_password(request.new_password)
+    user.password_hash = new_hash
+    await repo.update(user)
+
+    logger.info("Password changed for user: %s", user.email)
+    return {"success": True}

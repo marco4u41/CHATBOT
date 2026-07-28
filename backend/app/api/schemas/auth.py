@@ -55,3 +55,16 @@ class UserResponse(BaseModel):
     display_name: str | None = None
     created_at: str
     is_admin: bool = False
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str = Field(..., min_length=1, description="Contraseña actual")
+    new_password: str = Field(..., min_length=8, max_length=128, description="Nueva contraseña")
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_new_password(cls, v: str) -> str:
+        trimmed = v.strip()
+        if len(trimmed) < 8:
+            raise ValueError("La nueva contraseña debe tener al menos 8 caracteres")
+        return v
